@@ -2122,6 +2122,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             }}
             onClick={() => handlePointClick(point)}
             onMouseDown={(e) => handlePointMouseDown(e, point)}
+            onTouchStart={(e) => handlePointTouchStart(e, point)}
             animate={{
               y: [0, -5 - point.id * 0.8, 0, 3.5 + point.id * 0.5, 0],
               x: [0, 2 + point.id * 0.4, 0, -2.5 - point.id * 0.3, 0],
