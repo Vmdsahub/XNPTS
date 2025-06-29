@@ -7,10 +7,7 @@ import React, {
 } from "react";
 import { motion, useMotionValue, animate } from "framer-motion";
 import { PlayerShip } from "./PlayerShip";
-import {
-  playBarrierCollisionSound,
-  playAutoPilotActivationSound,
-} from "../../utils/soundManager";
+import { playBarrierCollisionSound, playAutoPilotActivationSound } from "../../utils/soundManager";
 import { useAuthStore } from "../../store/authStore";
 
 interface GalaxyMapProps {}
@@ -318,7 +315,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   // Debug: log das posições iniciais
   useEffect(() => {
     console.log("🚀 Posição inicial da nave:", shipPosition);
-    console.log("🗺️ Posição inicial do mapa:", {
+    console.log("��️ Posição inicial do mapa:", {
       x: mapX.get(),
       y: mapY.get(),
     });
@@ -1174,6 +1171,9 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         setIsHolding(false);
         setHoldProgress(0);
         setHoldStartTime(null);
+        // Reproduz som de ativação
+        playAutoPilotActivationSound();
+      }
       } else if (isHolding) {
         animationId = requestAnimationFrame(updateProgress);
       }
@@ -1652,7 +1652,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         </motion.div>
       )}
 
-      {/* Notificação de Colisão - Centralizada no topo do mapa */}
+      {/* Notificação de Colis��o - Centralizada no topo do mapa */}
       {collisionNotification.show && (
         <div className="absolute top-4 left-0 right-0 z-50 flex justify-center">
           <motion.div
