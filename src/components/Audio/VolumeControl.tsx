@@ -12,25 +12,18 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
   const { volume, setVolume, isPlaying, play } = useBackgroundMusic();
   const [showPlayButton, setShowPlayButton] = useState(false);
 
-  // Verifica se música não iniciou automaticamente
+  // Mostra botão de play se música não estiver tocando
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isPlaying && volume > 0) {
-        setShowPlayButton(true);
-        console.log("🔊 Música não iniciou automaticamente, mostrando botão");
-      }
-    }, 2000);
-
-    if (isPlaying) {
+    if (!isPlaying && volume > 0) {
+      setShowPlayButton(true);
+    } else {
       setShowPlayButton(false);
     }
-
-    return () => clearTimeout(timer);
   }, [isPlaying, volume]);
 
   const handlePlayClick = async () => {
     try {
-      console.log("▶��� Iniciando música manualmente...");
+      console.log("▶️ Iniciando música manualmente...");
       await play();
       setShowPlayButton(false);
     } catch (error) {
