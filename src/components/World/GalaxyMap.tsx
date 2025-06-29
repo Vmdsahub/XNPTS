@@ -1878,6 +1878,30 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     });
   };
 
+  const handlePointTouchStart = (e: React.TouchEvent, point: Point) => {
+    if (!isAdmin) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const touchX = touch.clientX - rect.left;
+    const touchY = touch.clientY - rect.top;
+    const pointX = (point.x / 100) * rect.width;
+    const pointY = (point.y / 100) * rect.height;
+
+    setDraggingPoint(point.id);
+    setDragOffset({
+      x: touchX - pointX,
+      y: touchY - pointY,
+    });
+  };
+
   const handlePointMouseMove = (e: React.MouseEvent) => {
     if (!isAdmin || draggingPoint === null) return;
 
