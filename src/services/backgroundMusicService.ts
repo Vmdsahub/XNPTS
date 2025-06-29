@@ -52,6 +52,9 @@ class BackgroundMusicService {
   private fadeSteps: number = 20;
   private fadeDuration: number = 2000; // 2 segundos
   private crossfadeNextTrack: HTMLAudioElement | null = null;
+  private syntheticAudioContext: AudioContext | null = null;
+  private currentOscillators: OscillatorNode[] = [];
+  private isUsingSynthetic: boolean = false;
 
   constructor() {
     this.originalTracksCount = this.tracks.length;
