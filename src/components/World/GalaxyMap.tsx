@@ -188,10 +188,16 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     y: 45,
     targetX: 60,
     targetY: 55,
+    controlX: 55, // ponto de controle para curva Bézier
+    controlY: 50,
     rotation: 0,
     targetRotation: 0,
     isMoving: false,
-    speed: 0.02, // muito lento
+    isPaused: false,
+    pauseTimer: 0,
+    speed: 0.015, // ainda mais lento
+    progress: 0, // progresso na curva atual (0-1)
+    behavior: "patrolling", // 'patrolling', 'paused', 'investigating'
   });
 
   const mapRef = useRef<HTMLDivElement>(null);
