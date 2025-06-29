@@ -91,16 +91,7 @@ export const MapPoint: React.FC<MapPointProps> = ({
   const colors = getPointColor(point.type, point.id);
 
   // Generate unique floating animation parameters for each point
-  const floatingParams = React.useMemo(
-    () => ({
-      yOffset: 3 + Math.random() * 4, // 3-7px floating range
-      duration: 3 + Math.random() * 2, // 3-5 second duration
-      delay: Math.random() * 3, // 0-3 second delay
-      rotationRange: 1 + Math.random() * 2, // 1-3 degree rotation
-      rotationDuration: 4 + Math.random() * 4, // 4-8 second rotation
-    }),
-    [point.id],
-  );
+  const randomSeed = React.useMemo(() => Math.random(), [point.id]);
 
   return (
     <motion.div
@@ -113,44 +104,15 @@ export const MapPoint: React.FC<MapPointProps> = ({
       animate={{
         opacity: 1,
         scale: 1,
-        y: [0, floatingParams.yOffset, 0, -floatingParams.yOffset, 0],
-        rotate: [
-          0,
-          floatingParams.rotationRange,
-          0,
-          -floatingParams.rotationRange,
-          0,
-        ],
         filter: isNearby
           ? `drop-shadow(0 0 12px ${colors.glow})`
           : `drop-shadow(0 0 6px ${colors.glow})`,
       }}
       transition={{
-        opacity: {
-          type: "spring",
-          stiffness: 300,
-          damping: 30,
-          delay: Math.random() * 0.5,
-        },
-        scale: {
-          type: "spring",
-          stiffness: 300,
-          damping: 30,
-          delay: Math.random() * 0.5,
-        },
-        y: {
-          duration: floatingParams.duration,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: floatingParams.delay,
-        },
-        rotate: {
-          duration: floatingParams.rotationDuration,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: floatingParams.delay * 1.5,
-        },
-        filter: { duration: 0.3 },
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+        delay: randomSeed * 0.5,
       }}
     >
       {/* Outer pulse ring for nearby state */}
