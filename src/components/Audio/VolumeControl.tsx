@@ -42,8 +42,8 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
     console.log("🎛️ VolumeControl: Slider mudou para:", newVolume);
     setVolume(newVolume);
 
-    // Se estiver aumentando volume e música não estiver tocando, tenta iniciar
-    if (newVolume > 0 && !isPlaying) {
+    // Se estiver aumentando volume e música nunca foi iniciada, tenta iniciar
+    if (newVolume > 0 && !isPlaying && !isPaused) {
       try {
         console.log("🔊 Iniciando música via slider de volume...");
         await play();
