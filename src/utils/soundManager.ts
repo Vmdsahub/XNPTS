@@ -429,7 +429,7 @@ export const playBarrierCollisionSound = (): Promise<void> => {
 /**
  * Creates an auto pilot activation sound using Web Audio API
  */
-const playAutoPilotActivationSound = (): Promise<void> => {
+const createAutoPilotActivationSound = (): Promise<void> => {
   return new Promise((resolve) => {
     try {
       const audioContext = new (window.AudioContext ||
