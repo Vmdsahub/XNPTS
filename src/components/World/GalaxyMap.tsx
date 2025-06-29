@@ -5,12 +5,7 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import {
-  motion,
-  useMotionValue,
-  animate,
-  AnimatePresence,
-} from "framer-motion";
+import { motion, useMotionValue, animate, AnimatePresence } from "framer-motion";
 import { PlayerShip } from "./PlayerShip";
 import {
   playBarrierCollisionSound,
@@ -759,7 +754,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Sistema de momentum/inércia
+  // Sistema de momentum/in��rcia
   useEffect(() => {
     velocityRef.current = velocity;
   }, [velocity]);
@@ -2295,9 +2290,10 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       </div>
 
       {/* Modal da Nave Navegante */}
-      {showShipModal && (
-        <>
-          <motion.div
+      <AnimatePresence>
+        {showShipModal && (
+          <>
+            <motion.div
             className="fixed inset-0 bg-black/70 z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
