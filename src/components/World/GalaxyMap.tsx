@@ -546,7 +546,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       "#FB7185",
     ];
 
-    // Fun��ão hash robusta
+    // Fun����o hash robusta
     const hash = (x: number, y: number, layer: number) => {
       let h = 1779033703 ^ layer;
       h = Math.imul(h ^ Math.floor(x), 3432918353);
@@ -1542,8 +1542,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Check if holding Shift for resize mode
-    if (e.shiftKey) {
+    // Check if holding Ctrl for resize mode
+    if (e.ctrlKey) {
       setResizingPoint(point.id);
       setResizeStartScale(point.scale || 1);
       setResizeStartY(e.clientY);
