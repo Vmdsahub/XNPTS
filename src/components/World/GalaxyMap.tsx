@@ -139,6 +139,9 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   // Drag states for points
   const [draggingPoint, setDraggingPoint] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [resizingPoint, setResizingPoint] = useState<number | null>(null);
+  const [resizeStartScale, setResizeStartScale] = useState<number>(1);
+  const [resizeStartY, setResizeStartY] = useState<number>(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isColliding, setIsColliding] = useState(false);
   const [collisionNotification, setCollisionNotification] = useState<{
