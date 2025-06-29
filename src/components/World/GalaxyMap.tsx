@@ -1317,7 +1317,24 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   // Mouse events globais para capturar movimento fora do elemento
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
-      // Handle point dragging first
+      // Handle point resizing first
+      if (isAdmin && resizingPoint !== null) {
+        const deltaY = e.clientY - resizeStartY;
+        const scaleFactor = 1 + deltaY / 100; // 100px movement = 1x scale change
+        const newScale = Math.max(
+          0.3,
+          Math.min(3, resizeStartScale * scaleFactor),
+        );
+
+        const newPoints = points.map((p) =>
+          p.id === resizingPoint ? { ...p, scale: newScale } : p,
+        );
+
+        setPoints(newPoints);
+        return;
+      }
+
+      // Handle point dragging
       if (isAdmin && draggingPoint !== null) {
         const rect = containerRef.current?.getBoundingClientRect();
         if (!rect) return;
