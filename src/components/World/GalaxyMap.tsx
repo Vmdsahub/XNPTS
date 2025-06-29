@@ -20,6 +20,7 @@ import {
 } from "../../utils/soundManager";
 import { useAuthStore } from "../../store/authStore";
 import { gameService, GalaxyWorld } from "../../services/gameService";
+import { useBackgroundMusic } from "../../hooks/useBackgroundMusic";
 
 interface GalaxyMapProps {}
 
