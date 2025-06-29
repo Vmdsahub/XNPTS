@@ -193,16 +193,20 @@ class BackgroundMusicService {
     this.isPlaying = false;
     this.isPaused = false;
 
-    if (this.currentTrack) {
-      await this.fadeOut(this.currentTrack);
-      this.currentTrack.pause();
-      this.currentTrack.currentTime = 0;
-      this.currentTrack = null;
-    }
+    if (this.isUsingSynthetic) {
+      this.stopSyntheticTrack();
+    } else {
+      if (this.currentTrack) {
+        await this.fadeOut(this.currentTrack);
+        this.currentTrack.pause();
+        this.currentTrack.currentTime = 0;
+        this.currentTrack = null;
+      }
 
-    if (this.crossfadeNextTrack) {
-      this.crossfadeNextTrack.pause();
-      this.crossfadeNextTrack = null;
+      if (this.crossfadeNextTrack) {
+        this.crossfadeNextTrack.pause();
+        this.crossfadeNextTrack = null;
+      }
     }
 
     this.clearFadeInterval();
