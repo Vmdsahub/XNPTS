@@ -117,7 +117,7 @@ const createDefaultPoints = (): Point[] => {
   return points;
 };
 
-// Configuração simplificada do mundo toroidal
+// Configura��ão simplificada do mundo toroidal
 const WORLD_CONFIG = {
   width: 200, // Tamanho do mundo em %
   height: 200,
@@ -2087,14 +2087,15 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               ...prev,
               x: newX,
               y: newY,
-              rotation: newRotation,
               progress: newProgress,
+              rotation: newRotation,
               isMoving: true,
-              isPaused: false,
+              distanceToPlayer,
             };
           }
         }
 
+        return { ...prev, distanceToPlayer };
         return prev;
       });
 
