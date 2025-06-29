@@ -138,30 +138,71 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   const { user } = useAuthStore();
   const isAdmin = user?.username === "Vitoca";
 
-  // Load points from localStorage or use defaults
-  const [points, setPoints] = useState<Point[]>(() => {
-    const saved = localStorage.getItem("xenopets-galaxy-points");
-    if (saved) {
-      try {
-        const savedPoints = JSON.parse(saved);
-        // Ensure all points have scale property
-        return savedPoints.map((point: Point) => ({
-          ...point,
-          scale: point.scale || 1,
-        }));
-      } catch (e) {
-        console.warn("Erro ao carregar pontos salvos:", e);
-      }
-    }
+  // Load points from database or use localStorage fallback
+  const [points, setPoints] = useState<Point[]>([]);
+  const [isLoadingWorlds, setIsLoadingWorlds] = useState(true);
 
-    // Força a recriação dos pontos com as novas imagens
-    const defaultPoints = createDefaultPoints();
-    localStorage.setItem(
-      "xenopets-galaxy-points",
-      JSON.stringify(defaultPoints),
-    );
-    return defaultPoints;
-  });
+  // Load galaxy worlds from database
+  useEffect(() => {
+    const loadGalaxyWorlds = async () => {
+      try {
+        setIsLoadingWorlds(true);
+        const worlds = await gameService.getGalaxyWorlds();
+
+        if (worlds.length > 0) {
+          // Use database data
+          const worldPoints = worlds.map(galaxyWorldToPoint);
+          setPoints(worldPoints);
+          console.log("🌌 Mundos carregados do banco:", worlds);
+        } else {
+          // Fallback to localStorage or create defaults
+          const saved = localStorage.getItem("xenopets-galaxy-points");
+          if (saved) {
+            try {
+              const savedPoints = JSON.parse(saved);
+              setPoints(
+                savedPoints.map((point: Point) => ({
+                  ...point,
+                  scale: point.scale || 1,
+                })),
+              );
+              console.log("💾 Usando dados do localStorage como fallback");
+            } catch (e) {
+              console.warn("Erro ao carregar pontos salvos:", e);
+              setPoints(createDefaultPoints());
+            }
+          } else {
+            const defaultPoints = createDefaultPoints();
+            setPoints(defaultPoints);
+            console.log("🎯 Usando pontos padrão");
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar mundos da galáxia:", error);
+        // Use localStorage fallback on error
+        const saved = localStorage.getItem("xenopets-galaxy-points");
+        if (saved) {
+          try {
+            const savedPoints = JSON.parse(saved);
+            setPoints(
+              savedPoints.map((point: Point) => ({
+                ...point,
+                scale: point.scale || 1,
+              })),
+            );
+          } catch (e) {
+            setPoints(createDefaultPoints());
+          }
+        } else {
+          setPoints(createDefaultPoints());
+        }
+      } finally {
+        setIsLoadingWorlds(false);
+      }
+    };
+
+    loadGalaxyWorlds();
+  }, []);
 
   const [shipPosition, setShipPosition] = useState(() => {
     const saved = localStorage.getItem("xenopets-player-data");
