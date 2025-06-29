@@ -341,12 +341,12 @@ class BackgroundMusicService {
     this.currentTrackIndex = index;
     console.log(`🎵 Reproduzindo: ${config.name}`);
 
-    // Auto próxima faixa após 90 segundos
+    // Auto próxima faixa após 180 segundos (3 minutos)
     setTimeout(() => {
       if (this.isPlaying && this.isUsingSynthetic) {
         this.nextTrack();
       }
-    }, 90000);
+    }, 180000);
   }
 
   private createSpaceAmbient(ctx: AudioContext, config: any): void {
