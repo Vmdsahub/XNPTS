@@ -181,7 +181,15 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
   // Estados para a nave navegante
   const [showShipModal, setShowShipModal] = useState(false);
-  const [wanderingShipAngle, setWanderingShipAngle] = useState(0);
+  const [wanderingShip, setWanderingShip] = useState({
+    x: 50, // posição relativa na barreira
+    y: 45,
+    targetX: 60,
+    targetY: 55,
+    rotation: 0,
+    isMoving: false,
+    speed: 0.02, // muito lento
+  });
 
   const mapRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
