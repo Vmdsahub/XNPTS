@@ -5,7 +5,12 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import { motion, useMotionValue, animate, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  animate,
+  AnimatePresence,
+} from "framer-motion";
 import { PlayerShip } from "./PlayerShip";
 import {
   playBarrierCollisionSound,
@@ -2294,105 +2299,106 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         {showShipModal && (
           <>
             <motion.div
-            className="fixed inset-0 bg-black/70 z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowShipModal(false)}
-          />
-          <motion.div
-            className="fixed inset-0 flex items-center justify-center p-4 z-50"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-          >
-            <div className="bg-gradient-to-br from-slate-900 to-black rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-gray-700">
-              {/* Botão de fechar */}
-              <button
-                onClick={() => setShowShipModal(false)}
-                className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors"
-              >
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              className="fixed inset-0 bg-black/70 z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowShipModal(false)}
+            />
+            <motion.div
+              className="fixed inset-0 flex items-center justify-center p-4 z-50"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+            >
+              <div className="bg-gradient-to-br from-slate-900 to-black rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-gray-700">
+                {/* Botão de fechar */}
+                <button
+                  onClick={() => setShowShipModal(false)}
+                  className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+
+                {/* Imagem grande da nave */}
+                <div className="text-center mb-6">
+                  <motion.img
+                    src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F35b6bdfaaf2f41f2882a22458f10917d?format=webp&width=800"
+                    alt="Nave Mercante"
+                    className="w-48 h-48 mx-auto mb-4"
+                    animate={{
+                      y: [0, -5, 0, 5, 0],
+                      rotate: [0, 1, 0, -1, 0],
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
                   />
-                </svg>
-              </button>
-
-              {/* Imagem grande da nave */}
-              <div className="text-center mb-6">
-                <motion.img
-                  src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F35b6bdfaaf2f41f2882a22458f10917d?format=webp&width=800"
-                  alt="Nave Mercante"
-                  className="w-48 h-48 mx-auto mb-4"
-                  animate={{
-                    y: [0, -5, 0, 5, 0],
-                    rotate: [0, 1, 0, -1, 0],
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-              </div>
-
-              {/* Texto de diálogo */}
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-cyan-300 mb-4">
-                  Nave Mercante do Sistema
-                </h2>
-                <div className="bg-slate-800/50 rounded-2xl p-6 border border-cyan-500/30">
-                  <p className="text-lg text-cyan-100 leading-relaxed">
-                    "Olá, viajante! Sou o Capitão Zyx da nave mercante Estrela
-                    Errante. Navego por estas rotas comerciais há décadas,
-                    transportando recursos entre os planetas do sistema."
-                  </p>
-                  <p className="text-base text-cyan-200 mt-4">
-                    "Precisa de alguma coisa? Tenho suprimentos frescos de todas
-                    as dimensões!"
-                  </p>
                 </div>
-              </div>
 
-              {/* Área vazia para futuras funcionalidades */}
-              <div className="bg-slate-800/30 rounded-2xl p-8 border-2 border-dashed border-gray-600">
-                <div className="text-center text-gray-400">
-                  <div className="w-16 h-16 bg-gray-700/50 rounded-full mx-auto mb-4 flex items-center justify-center">
-                    <svg
-                      className="w-8 h-8"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
+                {/* Texto de diálogo */}
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold text-cyan-300 mb-4">
+                    Nave Mercante do Sistema
+                  </h2>
+                  <div className="bg-slate-800/50 rounded-2xl p-6 border border-cyan-500/30">
+                    <p className="text-lg text-cyan-100 leading-relaxed">
+                      "Olá, viajante! Sou o Capitão Zyx da nave mercante Estrela
+                      Errante. Navego por estas rotas comerciais há décadas,
+                      transportando recursos entre os planetas do sistema."
+                    </p>
+                    <p className="text-base text-cyan-200 mt-4">
+                      "Precisa de alguma coisa? Tenho suprimentos frescos de
+                      todas as dimensões!"
+                    </p>
                   </div>
-                  <p className="text-sm">
-                    Área reservada para interações futuras
-                  </p>
-                  <p className="text-xs mt-2">
-                    Comércio • Missões • Informações
-                  </p>
+                </div>
+
+                {/* Área vazia para futuras funcionalidades */}
+                <div className="bg-slate-800/30 rounded-2xl p-8 border-2 border-dashed border-gray-600">
+                  <div className="text-center text-gray-400">
+                    <div className="w-16 h-16 bg-gray-700/50 rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-sm">
+                      Área reservada para interações futuras
+                    </p>
+                    <p className="text-xs mt-2">
+                      Comércio • Missões • Informações
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        </>
-      )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Coordenadas simplificadas na parte inferior */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/20 text-xs font-mono font-thin whitespace-nowrap">
