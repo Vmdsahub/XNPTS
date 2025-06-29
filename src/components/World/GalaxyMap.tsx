@@ -837,7 +837,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
           ease: "easeOut",
         });
 
-        // Atualiza posi��ão da nave correspondentemente
+        // Atualiza posição da nave correspondentemente
         const repelShipX = (normalizedX * repelForce) / 12;
         const repelShipY = (normalizedY * repelForce) / 12;
 
@@ -1856,7 +1856,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     let animationId: number;
 
     const animateWanderingShip = () => {
-      setWanderingShipAngle((prev) => (prev + 0.3) % 360); // Movimento lento
+      setWanderingShipAngle((prev) => (prev + 0.05) % 360); // Movimento muito lento
       animationId = requestAnimationFrame(animateWanderingShip);
     };
 
