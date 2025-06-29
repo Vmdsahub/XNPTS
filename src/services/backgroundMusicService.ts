@@ -94,7 +94,7 @@ class BackgroundMusicService {
   private setupSyntheticMusic(): void {
     this.isUsingSynthetic = true;
     this.tracks = [
-      { id: "synthetic-1", name: "Ambient Space", path: "synthetic" },
+      { id: "synthetic-1", name: "Nebula Drift", path: "synthetic" },
       { id: "synthetic-2", name: "Cosmic Winds", path: "synthetic" },
       { id: "synthetic-3", name: "Deep Void", path: "synthetic" },
     ];
