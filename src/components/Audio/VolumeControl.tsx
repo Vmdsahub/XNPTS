@@ -49,6 +49,7 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
 
   const toggleMute = async () => {
     const newVolume = volume > 0 ? 0 : 0.3;
+    console.log("🔇 VolumeControl: Toggle mute de", volume, "para", newVolume);
     setVolume(newVolume);
 
     // Se estiver desmutando, tenta iniciar música
