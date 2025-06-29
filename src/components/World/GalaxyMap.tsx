@@ -139,6 +139,14 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   const { user } = useAuthStore();
   const isAdmin = user?.username === "Vitoca";
 
+  // Background music for galactic navigation
+  const {
+    isPlaying: isMusicPlaying,
+    play: playMusic,
+    pause: pauseMusic,
+    stop: stopMusic,
+  } = useBackgroundMusic();
+
   // Load points from database or use localStorage fallback
   const [points, setPoints] = useState<Point[]>([]);
   const [isLoadingWorlds, setIsLoadingWorlds] = useState(true);
@@ -1221,7 +1229,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     pos1: { x: number; y: number },
     pos2: { x: number; y: number },
   ) => {
-    // Calcula diferenças considerando wrap em mundo toroidal
+    // Calcula diferen��as considerando wrap em mundo toroidal
     const dx1 = Math.abs(pos1.x - pos2.x);
     const dx2 = WORLD_CONFIG.width - dx1;
     const minDx = Math.min(dx1, dx2);
