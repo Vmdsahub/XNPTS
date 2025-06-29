@@ -1929,6 +1929,15 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     };
   }, []);
 
+  // Sistema de som para nave mercante
+  useEffect(() => {
+    if (wanderingShip.isMoving) {
+      startEngineSound();
+    } else {
+      stopEngineSound();
+    }
+  }, [wanderingShip.isMoving]);
+
   const handlePointClick = (point: Point) => {
     if (!isAdmin || draggingPoint !== null) return;
     console.log(`Clicou no ${point.label}`, point);
