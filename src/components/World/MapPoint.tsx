@@ -113,8 +113,14 @@ export const MapPoint: React.FC<MapPointProps> = ({
       animate={{
         opacity: 1,
         scale: 1,
-        y: [-floatingParams.yOffset, floatingParams.yOffset],
-        rotate: [-floatingParams.rotationRange, floatingParams.rotationRange],
+        y: [0, floatingParams.yOffset, 0, -floatingParams.yOffset, 0],
+        rotate: [
+          0,
+          floatingParams.rotationRange,
+          0,
+          -floatingParams.rotationRange,
+          0,
+        ],
         filter: isNearby
           ? `drop-shadow(0 0 12px ${colors.glow})`
           : `drop-shadow(0 0 6px ${colors.glow})`,
@@ -135,14 +141,12 @@ export const MapPoint: React.FC<MapPointProps> = ({
         y: {
           duration: floatingParams.duration,
           repeat: Infinity,
-          repeatType: "reverse",
           ease: "easeInOut",
           delay: floatingParams.delay,
         },
         rotate: {
           duration: floatingParams.rotationDuration,
           repeat: Infinity,
-          repeatType: "reverse",
           ease: "easeInOut",
           delay: floatingParams.delay * 1.5,
         },
