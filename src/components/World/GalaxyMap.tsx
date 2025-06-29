@@ -1643,6 +1643,158 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       );
     };
 
+    // Touch event handlers globais
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      // Handle point resizing first
+      if (isAdmin && resizingPoint !== null) {
+        const deltaY = touch.clientY - resizeStartY;
+        const scaleFactor = 1 + deltaY * 0.002;
+        const newScale = Math.max(
+          0.5,
+          Math.min(3, resizeStartScale * scaleFactor),
+        );
+
+        const newPoints = points.map((p) =>
+          p.id === resizingPoint ? { ...p, scale: newScale } : p,
+        );
+        setPoints(newPoints);
+        return;
+      }
+
+      // Handle point dragging
+      if (isAdmin && draggingPoint !== null) {
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const touchX = touch.clientX - rect.left - dragOffset.x;
+        const touchY = touch.clientY - rect.top - dragOffset.y;
+
+        const newX = Math.max(5, Math.min(95, (touchX / rect.width) * 100));
+        const newY = Math.max(5, Math.min(95, (touchY / rect.height) * 100));
+
+        const newPoints = points.map((p) =>
+          p.id === draggingPoint ? { ...p, x: newX, y: newY } : p,
+        );
+        setPoints(newPoints);
+        return;
+      }
+
+      // Para o timer de auto-piloto se o touch se mover
+      if (isHolding) {
+        setIsHolding(false);
+        setHoldProgress(0);
+        setHoldStartTime(null);
+      }
+
+      const currentTime = Date.now();
+      const deltaTime = currentTime - lastMoveTime.current;
+      const deltaX = touch.clientX - lastMousePos.current.x;
+      const deltaY = touch.clientY - lastMousePos.current.y;
+
+      if (deltaTime > 0) {
+        const velX = Math.max(-1.5, Math.min(1.5, deltaX * 0.08));
+        const velY = Math.max(-1.5, Math.min(1.5, deltaY * 0.08));
+        setVelocity({ x: velX, y: velY });
+      }
+
+      const proposedX = wrap(
+        shipPosRef.current.x - deltaX / 12,
+        0,
+        WORLD_CONFIG.width,
+      );
+      const proposedY = wrap(
+        shipPosRef.current.y - deltaY / 12,
+        0,
+        WORLD_CONFIG.height,
+      );
+
+      const collision = checkBarrierCollision(proposedX, proposedY, points);
+      let allowMovement = !collision.isColliding;
+      let newX = proposedX;
+      let newY = proposedY;
+
+      if (collision.isColliding) {
+        repelPlayer(collision);
+        playBarrierCollisionSound();
+        showCollisionNotification();
+        newX = shipPosRef.current.x;
+        newY = shipPosRef.current.y;
+        allowMovement = false;
+        setVelocity({ x: 0, y: 0 });
+        setIsDecelerating(false);
+      }
+
+      setShipPosition({ x: newX, y: newY });
+
+      // Só atualiza mapa visual se movimento é permitido
+      if (allowMovement) {
+        let newMapX = mapX.get() + deltaX;
+        let newMapY = mapY.get() + deltaY;
+
+        const wrapThreshold = 5000;
+        if (newMapX > wrapThreshold) newMapX -= wrapThreshold * 2;
+        if (newMapX < -wrapThreshold) newMapX += wrapThreshold * 2;
+        if (newMapY > wrapThreshold) newMapY -= wrapThreshold * 2;
+        if (newMapY < -wrapThreshold) newMapY += wrapThreshold * 2;
+
+        mapX.set(newMapX);
+        mapY.set(newMapY);
+      }
+
+      if (Math.sqrt(deltaX * deltaX + deltaY * deltaY) > 1) {
+        setHasMoved(true);
+        const newAngle = Math.atan2(-deltaY, -deltaX) * (180 / Math.PI) + 90;
+        targetRotation.current = newAngle;
+        lastRotationUpdate.current = Date.now();
+      }
+
+      lastMousePos.current = { x: touch.clientX, y: touch.clientY };
+      lastMoveTime.current = currentTime;
+
+      e.preventDefault();
+    };
+
+    const handleGlobalTouchEnd = () => {
+      // Handle point resizing end
+      if (isAdmin && resizingPoint !== null) {
+        savePoints(points);
+        setResizingPoint(null);
+        setResizeStartScale(1);
+        setResizeStartY(0);
+        return;
+      }
+
+      // Handle point dragging end
+      if (isAdmin && draggingPoint !== null) {
+        savePoints(points);
+        setDraggingPoint(null);
+        setDragOffset({ x: 0, y: 0 });
+        return;
+      }
+
+      setIsDragging(false);
+      setIsHolding(false);
+      setHoldProgress(0);
+      setHoldStartTime(null);
+
+      // Se não moveu (apenas toque), para completamente
+      if (!hasMoved) {
+        setVelocity({ x: 0, y: 0 });
+        setIsDecelerating(false);
+      }
+
+      localStorage.setItem(
+        "xenopets-player-data",
+        JSON.stringify({
+          ship: shipPosRef.current,
+          map: { x: mapX.get(), y: mapY.get() },
+        }),
+      );
+    };
+
     if (isDragging || draggingPoint !== null) {
       document.addEventListener("mousemove", handleGlobalMouseMove);
       document.addEventListener("mouseup", handleGlobalMouseUp);
