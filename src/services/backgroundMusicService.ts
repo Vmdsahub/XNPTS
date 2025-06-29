@@ -253,6 +253,87 @@ class BackgroundMusicService {
   }
 
   /**
+   * Reproduz uma faixa sintética usando Web Audio API
+   */
+  private playSyntheticTrack(index: number): void {
+    if (!this.syntheticAudioContext) return;
+
+    // Para osciladores anteriores
+    this.stopSyntheticTrack();
+
+    const track = this.tracks[index];
+    const ctx = this.syntheticAudioContext;
+
+    // Configurações para cada faixa sintética
+    const trackConfigs = [
+      { freq: 55, type: "sine" as OscillatorType, harmonics: [1, 1.5, 2] },
+      {
+        freq: 82.4,
+        type: "triangle" as OscillatorType,
+        harmonics: [1, 1.2, 1.7],
+      },
+      { freq: 73.4, type: "sine" as OscillatorType, harmonics: [1, 2, 2.5] },
+    ];
+
+    const config = trackConfigs[index % trackConfigs.length];
+
+    // Cria osciladores para harmônicos
+    config.harmonics.forEach((harmonic, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.type = config.type;
+      osc.frequency.setValueAtTime(config.freq * harmonic, ctx.currentTime);
+
+      // Volume baseado no harmônico
+      const volume = (this.volume * 0.1) / (harmonic * 2);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 2);
+
+      // Adiciona modulação sutil
+      const lfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+      lfo.type = "sine";
+      lfo.frequency.setValueAtTime(0.1 + i * 0.05, ctx.currentTime);
+      lfoGain.gain.setValueAtTime(harmonic * 0.5, ctx.currentTime);
+
+      osc.start();
+      lfo.start();
+
+      this.currentOscillators.push(osc, lfo);
+    });
+
+    this.currentTrackIndex = index;
+    console.log(`🎵 Reproduzindo música sintética: ${track.name}`);
+
+    // Auto próxima faixa após 30 segundos
+    setTimeout(() => {
+      if (this.isPlaying && this.isUsingSynthetic) {
+        this.nextTrack();
+      }
+    }, 30000);
+  }
+
+  /**
+   * Para faixas sintéticas
+   */
+  private stopSyntheticTrack(): void {
+    this.currentOscillators.forEach((osc) => {
+      try {
+        osc.stop();
+      } catch (e) {
+        // Ignora erros se já parou
+      }
+    });
+    this.currentOscillators = [];
+  }
+
+  /**
    * Próxima faixa da playlist
    */
   async nextTrack(): Promise<void> {
