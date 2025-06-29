@@ -2447,42 +2447,22 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               className="relative w-10 h-10"
               style={{ rotate: wanderingShip.rotation }}
               animate={{
-                scale: wanderingShip.isMoving
-                  ? 1.05
-                  : wanderingShip.isPaused
-                    ? 0.95
-                    : 1,
-                // Vibração quando se movendo, pulsação quando pausado, flutuação quando normal
-                y: wanderingShip.isMoving
-                  ? [0, -0.5, 0, 0.5, 0]
-                  : wanderingShip.isPaused
-                    ? [0, -1, 0, 1, 0]
-                    : [0, -2, 0, 2, 0],
-                x: wanderingShip.isMoving
-                  ? [0, 0.5, 0, -0.5, 0]
-                  : wanderingShip.isPaused
-                    ? [0, 0.5, 0, -0.5, 0]
-                    : [0, 1.5, 0, -1.5, 0],
+                scale: 1.02, // Escala constante e sutil
+                // Flutuação suave e constante
+                y: [0, -1, 0, 1, 0],
+                x: [0, 0.5, 0, -0.5, 0],
               }}
               transition={{
-                scale: { type: "spring", stiffness: 300, damping: 30 },
+                scale: { duration: 0.3 },
                 y: {
-                  duration: wanderingShip.isMoving
-                    ? 0.15
-                    : wanderingShip.isPaused
-                      ? 1.5
-                      : 2.2,
+                  duration: 3,
                   repeat: Infinity,
-                  ease: wanderingShip.isMoving ? "linear" : "easeInOut",
+                  ease: "easeInOut",
                 },
                 x: {
-                  duration: wanderingShip.isMoving
-                    ? 0.12
-                    : wanderingShip.isPaused
-                      ? 1.8
-                      : 2.8,
+                  duration: 2.5,
                   repeat: Infinity,
-                  ease: wanderingShip.isMoving ? "linear" : "easeInOut",
+                  ease: "easeInOut",
                 },
               }}
             >
