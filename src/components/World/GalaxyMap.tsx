@@ -1764,8 +1764,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 style={{
                   filter:
                     draggingPoint === point.id
-                      ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8))"
-                      : "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))",
+                      ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
+                      : "drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1))",
                 }}
               >
                 <img
