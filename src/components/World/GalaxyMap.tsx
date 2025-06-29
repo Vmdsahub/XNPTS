@@ -2096,7 +2096,6 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         }
 
         return { ...prev, distanceToPlayer };
-        return prev;
       });
 
       animationId = requestAnimationFrame(updateWanderingShip);
