@@ -1726,31 +1726,46 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             <div className="relative group">
               {/* Imagem do planeta/estação */}
               <div
-                className={`w-16 h-16 transition-all duration-300 ${
+                className={`w-20 h-20 transition-all duration-300 ${
                   draggingPoint === point.id
                     ? "scale-110 brightness-110"
                     : "hover:scale-105 hover:brightness-110"
                 }`}
                 style={{
-                  filter:
-                    draggingPoint === point.id
-                      ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8))"
-                      : "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))",
+                  filter: draggingPoint === point.id
+                    ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8))"
+                    : "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))"
                 }}
               >
                 <img
                   src={point.image}
                   alt={point.label}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain rounded-lg"
                   style={{
-                    imageRendering: "crisp-edges",
+                    imageRendering: "crisp-edges"
+                  }}
+                  onError={(e) => {
+                    // Fallback quando a imagem não carrega
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
                   }}
                 />
 
+                {/* Fallback visual quando imagem falha */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-xs"
+                  style={{ display: 'none' }}
+                >
+                  {point.label.charAt(0)}
+                </div>
+
                 {/* Brilho de seleção para admin */}
                 {draggingPoint === point.id && (
-                  <div className="absolute inset-0 rounded-full bg-yellow-400/30 animate-pulse"></div>
+                  <div className="absolute inset-0 rounded-lg bg-yellow-400/30 animate-pulse"></div>
                 )}
+              </div>
               </div>
 
               {/* Admin indicator */}
