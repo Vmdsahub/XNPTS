@@ -30,7 +30,7 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
 
   const handlePlayClick = async () => {
     try {
-      console.log("▶️ Iniciando música manualmente...");
+      console.log("▶��� Iniciando música manualmente...");
       await play();
       setShowPlayButton(false);
     } catch (error) {
@@ -60,9 +60,19 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
+      {showPlayButton && (
+        <button
+          onClick={handlePlayClick}
+          className="text-purple-600 hover:text-purple-700 transition-colors p-1 bg-purple-100 rounded-full"
+          title="Iniciar música"
+        >
+          <Play size={14} />
+        </button>
+      )}
+
       <button
         onClick={toggleMute}
-        className="text-white/70 hover:text-white transition-colors p-1"
+        className="text-gray-600 hover:text-gray-800 transition-colors p-1"
         title={volume > 0 ? "Silenciar" : "Ativar som"}
       >
         {volume > 0 ? <Volume2 size={16} /> : <VolumeX size={16} />}
@@ -75,10 +85,10 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
         step="0.05"
         value={volume}
         onChange={handleVolumeChange}
-        className="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer volume-slider"
+        className="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer volume-slider"
         title="Volume"
         style={{
-          background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${volume * 100}%, rgba(255, 255, 255, 0.2) ${volume * 100}%, rgba(255, 255, 255, 0.2) 100%)`,
+          background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${volume * 100}%, rgba(156, 163, 175, 0.5) ${volume * 100}%, rgba(156, 163, 175, 0.5) 100%)`,
         }}
       />
     </div>
