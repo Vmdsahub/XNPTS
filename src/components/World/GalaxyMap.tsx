@@ -867,7 +867,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     [mapX, mapY],
   );
 
-  // Função para mostrar notificação de colis��o local
+  // Função para mostrar notificação de colisão local
   const showCollisionNotification = useCallback(() => {
     const notificationId = Date.now();
     setCollisionNotification({ show: true, id: notificationId });
@@ -2325,24 +2325,40 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               className="relative w-10 h-10"
               style={{ rotate: wanderingShip.rotation }}
               animate={{
-                scale: wanderingShip.isMoving ? 1.05 : 1,
-                // Vibração quando se movendo ou flutuação quando parado
+                scale: wanderingShip.isMoving
+                  ? 1.05
+                  : wanderingShip.isPaused
+                    ? 0.95
+                    : 1,
+                // Vibração quando se movendo, pulsação quando pausado, flutuação quando normal
                 y: wanderingShip.isMoving
                   ? [0, -0.5, 0, 0.5, 0]
-                  : [0, -2, 0, 2, 0],
+                  : wanderingShip.isPaused
+                    ? [0, -1, 0, 1, 0]
+                    : [0, -2, 0, 2, 0],
                 x: wanderingShip.isMoving
                   ? [0, 0.5, 0, -0.5, 0]
-                  : [0, 1.5, 0, -1.5, 0],
+                  : wanderingShip.isPaused
+                    ? [0, 0.5, 0, -0.5, 0]
+                    : [0, 1.5, 0, -1.5, 0],
               }}
               transition={{
                 scale: { type: "spring", stiffness: 300, damping: 30 },
                 y: {
-                  duration: wanderingShip.isMoving ? 0.15 : 2.2,
+                  duration: wanderingShip.isMoving
+                    ? 0.15
+                    : wanderingShip.isPaused
+                      ? 1.5
+                      : 2.2,
                   repeat: Infinity,
                   ease: wanderingShip.isMoving ? "linear" : "easeInOut",
                 },
                 x: {
-                  duration: wanderingShip.isMoving ? 0.12 : 2.8,
+                  duration: wanderingShip.isMoving
+                    ? 0.12
+                    : wanderingShip.isPaused
+                      ? 1.8
+                      : 2.8,
                   repeat: Infinity,
                   ease: wanderingShip.isMoving ? "linear" : "easeInOut",
                 },
