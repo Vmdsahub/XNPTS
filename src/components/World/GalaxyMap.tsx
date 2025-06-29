@@ -2647,7 +2647,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               onClick={() => handlePointClick(point)}
               onMouseDown={(e) => handlePointMouseDown(e, point)}
               onTouchStart={(e) => handlePointTouchStart(e, point)}
-              whileHover={{ scale: 1.2 }}
+              whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.95 }}
               animate={{
                 y: [0, -5 - point.id * 0.8, 0, 3.5 + point.id * 0.5, 0],
