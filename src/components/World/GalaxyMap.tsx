@@ -140,12 +140,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   const isAdmin = user?.username === "Vitoca";
 
   // Background music for galactic navigation
-  const {
-    isPlaying: isMusicPlaying,
-    play: playMusic,
-    pause: pauseMusic,
-    stop: stopMusic,
-  } = useBackgroundMusic();
+  const { play: playMusic, pause: pauseMusic } = useBackgroundMusic();
 
   // Load points from database or use localStorage fallback
   const [points, setPoints] = useState<Point[]>([]);
