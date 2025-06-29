@@ -21,6 +21,7 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import { gameService, GalaxyWorld } from "../../services/gameService";
 import { useBackgroundMusic } from "../../hooks/useBackgroundMusic";
+import { MusicControls } from "../Audio/MusicControls";
 
 interface GalaxyMapProps {}
 
