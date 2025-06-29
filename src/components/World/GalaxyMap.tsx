@@ -116,8 +116,13 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
   // Load points from localStorage or use defaults
   const [points, setPoints] = useState<Point[]>(() => {
-    const saved = localStorage.getItem("xenopets-galaxy-points");
-    return saved ? JSON.parse(saved) : createDefaultPoints();
+    // Força a recriação dos pontos com as novas imagens
+    const defaultPoints = createDefaultPoints();
+    localStorage.setItem(
+      "xenopets-galaxy-points",
+      JSON.stringify(defaultPoints),
+    );
+    return defaultPoints;
   });
 
   const [shipPosition, setShipPosition] = useState(() => {
