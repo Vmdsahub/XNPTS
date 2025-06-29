@@ -419,8 +419,9 @@ class BackgroundMusicService {
   }
 
   private createChordPad(ctx: AudioContext, config: any): void {
+    // Cria acordes que duram toda a faixa (180 segundos)
     config.chords.forEach((chord: number[], chordIndex: number) => {
-      const startTime = ctx.currentTime + 4 + chordIndex * 8;
+      const startTime = ctx.currentTime + 4 + chordIndex * 90; // Alterna a cada 90 segundos
 
       chord.forEach((freq: number) => {
         const osc = ctx.createOscillator();
@@ -437,16 +438,16 @@ class BackgroundMusicService {
         const volume = this.volume * 0.04;
 
         gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(volume, startTime + 2);
-        gain.gain.setValueAtTime(volume, startTime + 6);
-        gain.gain.linearRampToValueAtTime(0, startTime + 8);
+        gain.gain.linearRampToValueAtTime(volume, startTime + 5);
+        gain.gain.setValueAtTime(volume, startTime + 85);
+        gain.gain.linearRampToValueAtTime(0, startTime + 90);
 
         osc.connect(filter);
         filter.connect(gain);
         gain.connect(ctx.destination);
 
         osc.start(startTime);
-        osc.stop(startTime + 8);
+        osc.stop(startTime + 90);
 
         this.currentOscillators.push(osc);
       });
