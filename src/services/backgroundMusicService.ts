@@ -490,7 +490,7 @@ class BackgroundMusicService {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
-      osc.type = 'sine';
+      osc.type = "sine";
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
       // Volume diminui com harmônicos
@@ -514,9 +514,6 @@ class BackgroundMusicService {
         this.nextTrack();
       }
     }, 180000);
-  }
-      }
-    }, stepTime);
   }
 
   /**
@@ -589,7 +586,12 @@ class BackgroundMusicService {
    * Define o volume (0 a 1)
    */
   setVolume(newVolume: number): void {
-    console.log("🔊 Service: Mudando volume de", this.volume, "para", newVolume);
+    console.log(
+      "🔊 Service: Mudando volume de",
+      this.volume,
+      "para",
+      newVolume,
+    );
     this.volume = Math.max(0, Math.min(1, newVolume));
 
     if (this.isUsingSynthetic && this.masterGainNode) {
@@ -599,7 +601,7 @@ class BackgroundMusicService {
         if (ctx) {
           this.masterGainNode.gain.linearRampToValueAtTime(
             this.volume * 0.3, // Volume base reduzido
-            ctx.currentTime + 0.1
+            ctx.currentTime + 0.1,
           );
           console.log("✅ Volume sintético ajustado para:", this.volume);
         }
