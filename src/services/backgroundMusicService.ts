@@ -180,7 +180,9 @@ class BackgroundMusicService {
 
     this.isPaused = true;
 
-    if (this.currentTrack) {
+    if (this.isUsingSynthetic) {
+      this.stopSyntheticTrack();
+    } else if (this.currentTrack) {
       await this.fadeOut(this.currentTrack);
       this.currentTrack.pause();
     }
