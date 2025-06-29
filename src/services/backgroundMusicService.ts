@@ -54,6 +54,7 @@ class BackgroundMusicService {
   private crossfadeNextTrack: HTMLAudioElement | null = null;
   private syntheticAudioContext: AudioContext | null = null;
   private currentOscillators: OscillatorNode[] = [];
+  private currentGainNodes: GainNode[] = [];
   private isUsingSynthetic: boolean = false;
 
   constructor() {
