@@ -824,7 +824,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
 
-      // Calcula direção da repulsão (do centro da barreira para fora)
+      // Calcula direção da repuls��o (do centro da barreira para fora)
       const repelDirectionX = collisionX - centerX;
       const repelDirectionY = collisionY - centerY;
       const distance = Math.sqrt(
@@ -2371,8 +2371,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 className="w-full h-full object-contain drop-shadow-lg"
               />
 
-              {/* Trilha de propulsão - apenas quando se movendo */}
-              {wanderingShip.isMoving && (
+              {/* Trilha de propulsão - apenas quando realmente se movendo (não pausado) */}
+              {wanderingShip.isMoving && !wanderingShip.isPaused && (
                 <>
                   <motion.div
                     className="absolute w-0.5 h-6 bg-gradient-to-t from-transparent to-orange-400 transform -translate-x-1/2"
