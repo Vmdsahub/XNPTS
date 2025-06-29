@@ -2060,11 +2060,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   useEffect(() => {
     const distance = wanderingShip.distanceToPlayer;
     const maxDistance = 25; // Distância máxima para ouvir som
-    const shouldPlaySound =
-      wanderingShip.isMoving &&
-      !wanderingShip.isPaused &&
-      distance < maxDistance;
-
+    const shouldPlaySound = wanderingShip.isMoving && distance < maxDistance;
     if (shouldPlaySound) {
       // Calcula volume baseado na distância (0.0 a 0.3 para não interferir)
       const volume = Math.max(
