@@ -20,6 +20,7 @@ interface Point {
   label: string;
   image: string;
   type: string;
+  scale?: number;
 }
 
 // 7 pontos distribuídos em círculo ao redor do centro
