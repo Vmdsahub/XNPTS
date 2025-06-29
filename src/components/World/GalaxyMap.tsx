@@ -208,29 +208,15 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     loadGalaxyWorlds();
   }, []);
 
-  // Start background music when galaxy map loads
+  // Cleanup music when component unmounts
   useEffect(() => {
-    const startMusic = async () => {
-      try {
-        console.log("🎵 Tentando iniciar música galáctica...");
-        await playMusic();
-        console.log("✅ Música galáctica iniciada com sucesso");
-      } catch (error) {
-        console.error("❌ Erro ao iniciar música galáctica:", error);
-      }
-    };
-
-    // Aguarda um pouco para o contexto carregar
-    setTimeout(startMusic, 500);
-
-    // Cleanup: pause music when component unmounts
     return () => {
       console.log("🔇 Pausando música ao sair do mapa");
       pauseMusic().catch(() => {
         // Ignore errors on cleanup
       });
     };
-  }, [playMusic, pauseMusic]);
+  }, [pauseMusic]);
 
   const [shipPosition, setShipPosition] = useState(() => {
     const saved = localStorage.getItem("xenopets-player-data");
@@ -1078,7 +1064,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         return;
       }
 
-      // Atualiza posi��ão
+      // Atualiza posição
       setShipPosition({ x: proposedX, y: proposedY });
 
       // Atualiza mapa visual
