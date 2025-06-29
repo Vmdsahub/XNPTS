@@ -1729,9 +1729,6 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             onMouseDown={(e) => handlePointMouseDown(e, point)}
           >
             <div className="relative group">
-              {/* Debug info */}
-              {console.log('Renderizando ponto:', point.label, 'com imagem:', point.image)}
-
               {/* Imagem do planeta/estação */}
               <div
                 className={`w-24 h-24 transition-all duration-300 relative ${
@@ -1740,39 +1737,30 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                     : "hover:scale-105 hover:brightness-110"
                 }`}
                 style={{
-                  filter: draggingPoint === point.id
-                    ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8))"
-                    : "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))"
+                  filter:
+                    draggingPoint === point.id
+                      ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8))"
+                      : "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))",
                 }}
               >
-                {point.image && (
-                  <img
-                    src={point.image}
-                    alt={point.label}
-                    className="w-full h-full object-contain"
-                    crossOrigin="anonymous"
-                    loading="eager"
-                    onLoad={(e) => {
-                      console.log(`✅ Imagem carregada: ${point.label}`);
-                    }}
-                    onError={(e) => {
-                      console.error(`❌ Erro ao carregar imagem: ${point.label}`, point.image);
-                    }}
-                  />
-                )}
-
-                {/* Fallback temporário para debug */}
-                {!point.image && (
-                  <div className="w-full h-full bg-red-500 rounded-full flex items-center justify-center text-white font-bold">
-                    {point.label.charAt(0)}
-                  </div>
-                )}
+                <img
+                  src={point.image}
+                  alt={point.label}
+                  className="w-full h-full object-contain"
+                  crossOrigin="anonymous"
+                  loading="eager"
+                  onLoad={(e) => {
+                    console.log(`✅ Imagem carregada: ${point.label}`);
+                  }}
+                  onError={(e) => {
+                    console.error(
+                      `❌ Erro ao carregar imagem: ${point.label}`,
+                      point.image,
+                    );
+                  }}
+                />
 
                 {/* Brilho de seleção para admin */}
-                {draggingPoint === point.id && (
-                  <div className="absolute inset-0 rounded-lg bg-yellow-400/30 animate-pulse"></div>
-                )}
-              </div>
                 {draggingPoint === point.id && (
                   <div className="absolute inset-0 rounded-lg bg-yellow-400/30 animate-pulse"></div>
                 )}
