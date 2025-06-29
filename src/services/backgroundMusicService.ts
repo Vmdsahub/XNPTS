@@ -583,10 +583,40 @@ class BackgroundMusicService {
    * Define o volume (0 a 1)
    */
   setVolume(newVolume: number): void {
+    console.log(
+      "🔊 Service: Mudando volume de",
+      this.volume,
+      "para",
+      newVolume,
+    );
     this.volume = Math.max(0, Math.min(1, newVolume));
 
-    if (this.currentTrack) {
+    if (this.isUsingSynthetic) {
+      // Para música sintética, ajusta volume dos gain nodes
+      this.updateSyntheticVolume();
+    } else if (this.currentTrack) {
       this.currentTrack.volume = this.volume;
+    }
+  }
+
+  /**
+   * Atualiza volume da música sintética
+   */
+  private updateSyntheticVolume(): void {
+    // Para música sintética, precisamos recriar com novo volume
+    if (this.isPlaying && this.isUsingSynthetic) {
+      console.log("🔊 Atualizando volume sintético para:", this.volume);
+      // Silencia atual se volume for 0
+      if (this.volume === 0) {
+        this.currentOscillators.forEach((osc) => {
+          try {
+            osc.stop();
+          } catch (e) {
+            // Ignora
+          }
+        });
+        this.currentOscillators = [];
+      }
     }
   }
 
