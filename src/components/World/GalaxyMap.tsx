@@ -7,7 +7,10 @@ import React, {
 } from "react";
 import { motion, useMotionValue, animate } from "framer-motion";
 import { PlayerShip } from "./PlayerShip";
-import { playBarrierCollisionSound, playAutoPilotActivationSound } from "../../utils/soundManager";
+import {
+  playBarrierCollisionSound,
+  playAutoPilotActivationSound,
+} from "../../utils/soundManager";
 import { useAuthStore } from "../../store/authStore";
 
 interface GalaxyMapProps {}
@@ -1173,7 +1176,6 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         setHoldStartTime(null);
         // Reproduz som de ativação
         playAutoPilotActivationSound();
-      }
       } else if (isHolding) {
         animationId = requestAnimationFrame(updateProgress);
       }
