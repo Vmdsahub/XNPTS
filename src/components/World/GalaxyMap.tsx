@@ -2193,11 +2193,11 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     setPoints(newPoints);
   };
 
-  const handlePointMouseUp = () => {
+  const handlePointMouseUp = async () => {
     if (!isAdmin || draggingPoint === null) return;
 
     // Save final position
-    savePoints(points);
+    await savePoints(points);
     setDraggingPoint(null);
     setDragOffset({ x: 0, y: 0 });
   };
