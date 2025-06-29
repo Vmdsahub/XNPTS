@@ -1732,45 +1732,52 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                     : "hover:scale-105 hover:brightness-110"
                 }`}
                 style={{
-                  filter: draggingPoint === point.id
-                    ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8))"
-                    : "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))"
+                  filter:
+                    draggingPoint === point.id
+                      ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8))"
+                      : "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))",
                 }}
               >
                 {/* Planeta estilizado baseado no tipo */}
                 <div
                   className={`w-full h-full rounded-full flex items-center justify-center text-white font-bold text-sm relative overflow-hidden ${
-                    point.type === 'forest' ? 'bg-gradient-to-br from-green-400 to-green-700' :
-                    point.type === 'ice' ? 'bg-gradient-to-br from-blue-300 to-blue-600' :
-                    point.type === 'desert' ? 'bg-gradient-to-br from-yellow-400 to-orange-600' :
-                    point.type === 'village' ? 'bg-gradient-to-br from-emerald-400 to-green-600' :
-                    point.type === 'alien' ? 'bg-gradient-to-br from-purple-500 to-pink-600' :
-                    point.type === 'station' ? 'bg-gradient-to-br from-gray-400 to-gray-700' :
-                    'bg-gradient-to-br from-cyan-400 to-blue-600'
+                    point.type === "forest"
+                      ? "bg-gradient-to-br from-green-400 to-green-700"
+                      : point.type === "ice"
+                        ? "bg-gradient-to-br from-blue-300 to-blue-600"
+                        : point.type === "desert"
+                          ? "bg-gradient-to-br from-yellow-400 to-orange-600"
+                          : point.type === "village"
+                            ? "bg-gradient-to-br from-emerald-400 to-green-600"
+                            : point.type === "alien"
+                              ? "bg-gradient-to-br from-purple-500 to-pink-600"
+                              : point.type === "station"
+                                ? "bg-gradient-to-br from-gray-400 to-gray-700"
+                                : "bg-gradient-to-br from-cyan-400 to-blue-600"
                   }`}
                 >
                   {/* Textura/padrão baseado no tipo */}
-                  {point.type === 'forest' && (
+                  {point.type === "forest" && (
                     <div className="absolute inset-0 opacity-30">
                       <div className="w-2 h-2 bg-green-800 rounded-full absolute top-2 left-3"></div>
                       <div className="w-1 h-1 bg-green-900 rounded-full absolute top-4 right-2"></div>
                       <div className="w-1.5 h-1.5 bg-green-800 rounded-full absolute bottom-3 left-2"></div>
                     </div>
                   )}
-                  {point.type === 'ice' && (
+                  {point.type === "ice" && (
                     <div className="absolute inset-0 opacity-40">
                       <div className="w-1 h-4 bg-white/60 absolute top-2 left-2 rotate-12"></div>
                       <div className="w-1 h-3 bg-white/60 absolute top-3 right-3 -rotate-12"></div>
                       <div className="w-6 h-0.5 bg-white/40 absolute bottom-4 left-1"></div>
                     </div>
                   )}
-                  {point.type === 'desert' && (
+                  {point.type === "desert" && (
                     <div className="absolute inset-0 opacity-50">
                       <div className="w-0 h-0 border-l-2 border-r-2 border-b-3 border-transparent border-b-yellow-700 absolute top-4 left-2"></div>
                       <div className="w-0 h-0 border-l-1.5 border-r-1.5 border-b-2 border-transparent border-b-yellow-800 absolute top-5 right-3"></div>
                     </div>
                   )}
-                  {(point.type === 'station' || point.type === 'orbital') && (
+                  {(point.type === "station" || point.type === "orbital") && (
                     <div className="absolute inset-0 opacity-60">
                       <div className="w-1 h-1 bg-yellow-300 rounded-full absolute top-2 left-2"></div>
                       <div className="w-1 h-1 bg-yellow-300 rounded-full absolute top-3 right-2"></div>
@@ -1792,7 +1799,6 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 {draggingPoint === point.id && (
                   <div className="absolute inset-0 rounded-full bg-yellow-400/30 animate-pulse"></div>
                 )}
-              </div>
               </div>
 
               {/* Admin indicator */}
