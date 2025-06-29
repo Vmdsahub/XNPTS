@@ -31,9 +31,19 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
     }
   };
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVolumeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
+
+    // Se estiver aumentando volume e música não estiver tocando, tenta iniciar
+    if (newVolume > 0 && !isPlaying) {
+      try {
+        console.log("🔊 Iniciando música via slider de volume...");
+        await play();
+      } catch (error) {
+        console.warn("❌ Não foi possível iniciar música via slider:", error);
+      }
+    }
   };
 
   const toggleMute = async () => {
