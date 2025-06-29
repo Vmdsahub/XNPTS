@@ -189,6 +189,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     targetX: 60,
     targetY: 55,
     rotation: 0,
+    targetRotation: 0,
     isMoving: false,
     speed: 0.02, // muito lento
   });
@@ -828,7 +829,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         // Normaliza a direç��o e aplica força de repulsão
         const normalizedX = repelDirectionX / distance;
         const normalizedY = repelDirectionY / distance;
-        const repelForce = 15; // For��a da repulsão
+        const repelForce = 15; // For����a da repulsão
 
         // Para o movimento atual imediatamente
         setVelocity({ x: 0, y: 0 });
