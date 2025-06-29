@@ -867,7 +867,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     [mapX, mapY],
   );
 
-  // Função para mostrar notificação de colisão local
+  // Função para mostrar notificação de colis��o local
   const showCollisionNotification = useCallback(() => {
     const notificationId = Date.now();
     setCollisionNotification({ show: true, id: notificationId });
@@ -2034,12 +2034,12 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
   // Sistema de som para nave mercante
   useEffect(() => {
-    if (wanderingShip.isMoving) {
+    if (wanderingShip.isMoving && !wanderingShip.isPaused) {
       startEngineSound();
     } else {
       stopEngineSound();
     }
-  }, [wanderingShip.isMoving]);
+  }, [wanderingShip.isMoving, wanderingShip.isPaused]);
 
   const handlePointClick = (point: Point) => {
     if (!isAdmin || draggingPoint !== null) return;
