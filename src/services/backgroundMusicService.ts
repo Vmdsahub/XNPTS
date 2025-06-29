@@ -74,19 +74,37 @@ class BackgroundMusicService {
    * Pré-carrega uma faixa específica
    */
   private preloadTrack(path: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const audio = new Audio(path);
       audio.preload = "auto";
 
-      audio.addEventListener("canplaythrough", () => resolve(), { once: true });
+      audio.addEventListener(
+        "canplaythrough",
+        () => {
+          console.log(`✅ Faixa carregada: ${path}`);
+          resolve();
+        },
+        { once: true },
+      );
+
       audio.addEventListener(
         "error",
-        () => {
-          console.warn(`Não foi possível carregar: ${path}`);
+        (e) => {
+          console.warn(
+            `❌ Não foi possível carregar: ${path} - Arquivo inválido ou não encontrado`,
+          );
+          // Remove faixa inválida da lista
+          this.tracks = this.tracks.filter((track) => track.path !== path);
           resolve(); // Resolve mesmo com erro para não bloquear outras faixas
         },
         { once: true },
       );
+
+      // Timeout para evitar travamento
+      setTimeout(() => {
+        console.warn(`⏰ Timeout ao carregar: ${path}`);
+        resolve();
+      }, 5000);
 
       audio.load();
     });
