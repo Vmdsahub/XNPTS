@@ -270,59 +270,160 @@ class BackgroundMusicService {
     const track = this.tracks[index];
     const ctx = this.syntheticAudioContext;
 
-    // Configurações para cada faixa sintética
-    const trackConfigs = [
-      { freq: 55, type: "sine" as OscillatorType, harmonics: [1, 1.5, 2] },
+    // Configurações musicais espaciais mais complexas
+    const spaceConfigs = [
       {
-        freq: 82.4,
-        type: "triangle" as OscillatorType,
-        harmonics: [1, 1.2, 1.7],
+        name: "Nebula Drift",
+        baseFreq: 220, // A3
+        melody: [220, 246.94, 261.63, 293.66, 329.63], // A3, B3, C4, D4, E4
+        chords: [
+          [220, 261.63, 329.63],
+          [246.94, 293.66, 369.99],
+        ], // Am, Bdim
+        rhythm: [2, 1, 2, 1, 4],
+        filterFreq: 1000,
       },
-      { freq: 73.4, type: "sine" as OscillatorType, harmonics: [1, 2, 2.5] },
+      {
+        name: "Cosmic Winds",
+        baseFreq: 174.61, // F3
+        melody: [174.61, 196, 220, 246.94, 261.63], // F3, G3, A3, B3, C4
+        chords: [
+          [174.61, 220, 261.63],
+          [196, 246.94, 293.66],
+        ], // Fm, Gm
+        rhythm: [3, 1, 2, 2, 2],
+        filterFreq: 800,
+      },
+      {
+        name: "Deep Void",
+        baseFreq: 146.83, // D3
+        melody: [146.83, 164.81, 185, 207.65, 233.08], // D3, E3, F#3, G#3, A#3
+        chords: [
+          [146.83, 185, 233.08],
+          [164.81, 207.65, 246.94],
+        ], // Dm, Em
+        rhythm: [4, 2, 1, 3, 2],
+        filterFreq: 600,
+      },
     ];
 
-    const config = trackConfigs[index % trackConfigs.length];
+    const config = spaceConfigs[index % spaceConfigs.length];
 
-    // Cria osciladores para harmônicos
-    config.harmonics.forEach((harmonic, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.type = config.type;
-      osc.frequency.setValueAtTime(config.freq * harmonic, ctx.currentTime);
-
-      // Volume baseado no harmônico
-      const volume = (this.volume * 0.1) / (harmonic * 2);
-      gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 2);
-
-      // Adiciona modulação sutil
-      const lfo = ctx.createOscillator();
-      const lfoGain = ctx.createGain();
-      lfo.connect(lfoGain);
-      lfoGain.connect(osc.frequency);
-      lfo.type = "sine";
-      lfo.frequency.setValueAtTime(0.1 + i * 0.05, ctx.currentTime);
-      lfoGain.gain.setValueAtTime(harmonic * 0.5, ctx.currentTime);
-
-      osc.start();
-      lfo.start();
-
-      this.currentOscillators.push(osc, lfo);
-    });
+    this.createSpaceAmbient(ctx, config);
+    this.createMelodyLine(ctx, config);
+    this.createChordPad(ctx, config);
 
     this.currentTrackIndex = index;
-    console.log(`🎵 Reproduzindo música sintética: ${track.name}`);
+    console.log(`🎵 Reproduzindo: ${config.name}`);
 
-    // Auto próxima faixa após 30 segundos
+    // Auto próxima faixa após 90 segundos
     setTimeout(() => {
       if (this.isPlaying && this.isUsingSynthetic) {
         this.nextTrack();
       }
-    }, 30000);
+    }, 90000);
+  }
+
+  private createSpaceAmbient(ctx: AudioContext, config: any): void {
+    // Cria ambiente espacial com ruído filtrado
+    const bufferSize = ctx.sampleRate * 60; // 60 segundos
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    // Gera ruído rosa filtrado
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() - 0.5) * 0.1;
+    }
+
+    const noise = ctx.createBufferSource();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+
+    noise.buffer = buffer;
+    noise.loop = true;
+
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(config.filterFreq, ctx.currentTime);
+    filter.Q.setValueAtTime(0.5, ctx.currentTime);
+
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(this.volume * 0.15, ctx.currentTime + 3);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    noise.start();
+    this.currentOscillators.push(noise as any);
+  }
+
+  private createMelodyLine(ctx: AudioContext, config: any): void {
+    let time = ctx.currentTime + 2;
+
+    // Toca melodia com ritmo
+    config.melody.forEach((freq: number, i: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, time);
+
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(freq * 4, time);
+      filter.Q.setValueAtTime(1, time);
+
+      const noteLength = config.rhythm[i % config.rhythm.length];
+      const volume = this.volume * 0.08;
+
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(volume, time + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + noteLength);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(time);
+      osc.stop(time + noteLength);
+
+      time += noteLength + 0.5; // Pausa entre notas
+    });
+  }
+
+  private createChordPad(ctx: AudioContext, config: any): void {
+    config.chords.forEach((chord: number[], chordIndex: number) => {
+      const startTime = ctx.currentTime + 4 + chordIndex * 8;
+
+      chord.forEach((freq: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(freq * 0.5, startTime); // Oitava abaixo
+
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(freq * 2, startTime);
+        filter.Q.setValueAtTime(0.3, startTime);
+
+        const volume = this.volume * 0.04;
+
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(volume, startTime + 2);
+        gain.gain.setValueAtTime(volume, startTime + 6);
+        gain.gain.linearRampToValueAtTime(0, startTime + 8);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + 8);
+
+        this.currentOscillators.push(osc);
+      });
+    });
   }
 
   /**
