@@ -242,8 +242,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     velocityX: 0, // velocidade atual em X
     velocityY: 0, // velocidade atual em Y
     rotation: 0,
-    baseSpeed: 0.015, // velocidade base muito baixa
-    maxSpeed: 0.03, // velocidade máxima
+    baseSpeed: 0.2, // velocidade 4x mais rápida
+    maxSpeed: 0.4, // velocidade máxima 4x mais rápida
     direction: Math.random() * Math.PI * 2, // direção atual em radianos
     targetDirection: Math.random() * Math.PI * 2, // direção alvo
     directionChangeTimer: 0,
@@ -1492,8 +1492,6 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       setShipPosition({ x: newX, y: newY });
     }
 
-    setShipPosition({ x: newX, y: newY });
-
     // Só atualiza mapa visual se movimento é permitido
     if (allowMovement) {
       // Atualiza mapa visual com wrap
@@ -1948,15 +1946,6 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
   // Sistema de navegação inteligente com curvas suaves
   useEffect(() => {
-    let animationId: number;
-
-    // Função auxiliar para normalizar ângulos
-    const normalizeAngle = (angle) => {
-      while (angle < 0) angle += Math.PI * 2;
-      while (angle >= Math.PI * 2) angle -= Math.PI * 2;
-      return angle;
-    };
-
     const updateWanderingShip = () => {
       setWanderingShip((prev) => {
         // Calcula distância do jogador (centro do mapa) para a nave
@@ -2110,8 +2099,6 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
           nearestWorldDistance,
         };
       });
-
-      animationId = requestAnimationFrame(updateWanderingShip);
     };
 
     // Inicializa movimento suave da nave
@@ -2122,12 +2109,11 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       targetDirection: Math.random() * Math.PI * 2,
     }));
 
-    animationId = requestAnimationFrame(updateWanderingShip);
+    // Usa setInterval para movimento mais consistente (60 FPS)
+    const intervalId = setInterval(updateWanderingShip, 16);
 
     return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -2139,11 +2125,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
   useEffect(() => {
     const distance = wanderingShip.distanceToPlayer;
-    const maxDistance = 20; // Distância máxima reduzida para ouvir som
-    const shouldPlaySound =
-      wanderingShip.isMoving &&
-      !wanderingShip.isPaused &&
-      distance < maxDistance;
+    const maxDistance = 15; // Distância reduzida para só tocar quando realmente perto
+    const shouldPlaySound = distance < maxDistance; // Som só quando bem perto
 
     console.log(
       `🔊 Som da nave: distância=${distance.toFixed(2)}, deveria tocar=${shouldPlaySound}`,
@@ -2155,7 +2138,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         0,
         Math.min(1, distance / maxDistance),
       );
-      const volume = (1 - normalizedDistance) * 0.25; // Volume máximo 0.25
+      const volume = (1 - normalizedDistance) * 0.5; // Volume máximo aumentado para 0.5
 
       if (!merchantEngineSound) {
         // Cria um som de motor diferente para a nave mercante
@@ -2247,11 +2230,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         setMerchantEngineSound(null);
       }
     }
-  }, [
-    wanderingShip.isMoving,
-    wanderingShip.isPaused,
-    wanderingShip.distanceToPlayer,
-  ]);
+  }, [wanderingShip.distanceToPlayer, merchantEngineSound]);
 
   // Cleanup do som da nave mercante quando componente desmonta
   useEffect(() => {
@@ -2802,9 +2781,9 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 {/* Header com gradiente */}
                 <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-3xl p-6 text-center border-b border-gray-100">
                   <motion.img
-                    src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F35b6bdfaaf2f41f2882a22458f10917d?format=webp&width=800"
+                    src="https://cdn.builder.io/api/v1/image/assets%2Fcd7f7270636644acbedf48e0ef62abd0%2F9b01dc80171f480d8fb5a342061dde24?format=webp&width=800"
                     alt="Nave Mercante"
-                    className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4"
+                    className="w-32 h-32 sm:w-48 sm:h-48 mx-auto mb-4"
                     animate={{
                       y: [0, -3, 0, 3, 0],
                       rotate: [0, 1, 0, -1, 0],
