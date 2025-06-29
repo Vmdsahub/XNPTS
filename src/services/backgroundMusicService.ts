@@ -381,6 +381,7 @@ class BackgroundMusicService {
 
     noise.start();
     this.currentOscillators.push(noise as any);
+    this.currentGainNodes.push(gain);
   }
 
   private createMelodyLine(ctx: AudioContext, config: any): void {
