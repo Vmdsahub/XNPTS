@@ -886,7 +886,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       );
 
       if (distance > 0) {
-        // Normaliza a direç��o e aplica força de repulsão
+        // Normaliza a direç���o e aplica força de repulsão
         const normalizedX = repelDirectionX / distance;
         const normalizedY = repelDirectionY / distance;
         const repelForce = 15; // For��a da repulsão
@@ -2009,24 +2009,27 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
         // Sistema de movimento com curva Bézier
         if (prev.behavior === "patrolling") {
-          // Incrementa progresso na curva
-          const newProgress = prev.progress + prev.speed;
+          // Incrementa progresso na curva de forma mais suave
+          const smoothSpeed =
+            prev.speed * (0.8 + Math.sin(prev.progress * Math.PI) * 0.4);
+          const newProgress = Math.min(1, prev.progress + smoothSpeed);
 
           if (newProgress >= 1) {
             // Chegou ao destino - decide próxima ação
             const rand = Math.random();
-            if (rand < 0.3) {
-              // 30% chance de pausar
+            if (rand < 0.4) {
+              // 40% chance de pausar
               return {
                 ...prev,
                 behavior: "paused",
-                pauseTimer: 60 + Math.random() * 120, // 1-3 segundos a 60fps
+                pauseTimer: 120 + Math.random() * 180, // 2-5 segundos a 60fps
                 isMoving: false,
                 isPaused: true,
                 progress: 0,
+                distanceToPlayer,
               };
             } else {
-              // 70% chance de continuar patrulhando
+              // 60% chance de continuar patrulhando
               const route = generateNewRoute();
               return {
                 ...prev,
