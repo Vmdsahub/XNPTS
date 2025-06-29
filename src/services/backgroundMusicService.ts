@@ -59,6 +59,62 @@ class BackgroundMusicService {
   }
 
   /**
+   * Verifica se há arquivos de música reais disponíveis
+   */
+  private async checkForRealMusic(): Promise<void> {
+    console.log("🔍 Verificando arquivos de música...");
+
+    try {
+      // Testa o primeiro arquivo para ver se existe
+      const testAudio = new Audio(this.tracks[0].path);
+
+      const canLoad = await new Promise<boolean>((resolve) => {
+        const timeout = setTimeout(() => {
+          console.log("⏰ Timeout - usando música sintética");
+          resolve(false);
+        }, 3000);
+
+        testAudio.addEventListener(
+          "canplaythrough",
+          () => {
+            clearTimeout(timeout);
+            console.log("✅ Arquivos de música detectados!");
+            resolve(true);
+          },
+          { once: true },
+        );
+
+        testAudio.addEventListener(
+          "error",
+          () => {
+            clearTimeout(timeout);
+            console.log(
+              "❌ Arquivos não encontrados - usando música sintética",
+            );
+            resolve(false);
+          },
+          { once: true },
+        );
+
+        testAudio.load();
+      });
+
+      if (canLoad) {
+        console.log("🎵 Usando arquivos de música reais");
+        this.isUsingSynthetic = false;
+      } else {
+        this.setupSyntheticMusic();
+      }
+    } catch (error) {
+      console.warn(
+        "Erro ao verificar arquivos, usando música sintética:",
+        error,
+      );
+      this.setupSyntheticMusic();
+    }
+  }
+
+  /**
    * Configura música sintética
    */
   private setupSyntheticMusic(): void {
