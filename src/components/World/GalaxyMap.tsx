@@ -1731,7 +1731,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             <div className="relative group">
               {/* Imagem do planeta/estação */}
               <div
-                className={`w-24 h-24 transition-all duration-300 relative ${
+                className={`w-48 h-48 transition-all duration-300 relative ${
                   draggingPoint === point.id
                     ? "scale-110 brightness-110"
                     : "hover:scale-105 hover:brightness-110"
