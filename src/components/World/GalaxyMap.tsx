@@ -893,7 +893,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     [],
   );
 
-  // Função para atualizar direção do auto-piloto baseada na posição do mouse
+  // Função para atualizar dire��ão do auto-piloto baseada na posição do mouse
   const updateAutoPilotDirection = useCallback(
     (mouseX: number, mouseY: number) => {
       const canvas = canvasRef.current;
@@ -1202,7 +1202,6 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     setIsDragging(true);
     setHasMoved(false);
     lastMousePos.current = { x: e.clientX, y: e.clientY };
-    lastMousePos.current = { x: e.clientX, y: e.clientY };
 
     // Inicia o timer para auto-piloto
     const startTime = Date.now();
@@ -1212,6 +1211,35 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
     // Calcula direção inicial para auto-piloto
     updateAutoPilotDirection(e.clientX, e.clientY);
+
+    e.preventDefault();
+  };
+
+  // Touch event handlers para dispositivos móveis
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isAutoPilot) {
+      setIsAutoPilot(false);
+      return;
+    }
+
+    // Não inicia drag do mapa se estiver arrastando um ponto
+    if (draggingPoint !== null) return;
+
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    setIsDragging(true);
+    setHasMoved(false);
+    lastMousePos.current = { x: touch.clientX, y: touch.clientY };
+
+    // Inicia o timer para auto-piloto
+    const startTime = Date.now();
+    setHoldStartTime(startTime);
+    setIsHolding(true);
+    setHoldProgress(0);
+
+    // Calcula direção inicial para auto-piloto
+    updateAutoPilotDirection(touch.clientX, touch.clientY);
 
     e.preventDefault();
   };
