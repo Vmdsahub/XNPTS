@@ -15,6 +15,8 @@ import { PlayerShip } from "./PlayerShip";
 import {
   playBarrierCollisionSound,
   playAutoPilotActivationSound,
+  startEngineSound,
+  stopEngineSound,
 } from "../../utils/soundManager";
 import { useAuthStore } from "../../store/authStore";
 
@@ -366,7 +368,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     const life = 60 + Math.random() * 120; // Vida entre 1-3 segundos a 60fps
     const tailLength = 12 + Math.random() * 18; // Comprimento da cauda (reduzido)
 
-    // Posi��ão inicial fora da tela
+    // Posição inicial fora da tela
     const margin = 100;
     let startX, startY;
 
