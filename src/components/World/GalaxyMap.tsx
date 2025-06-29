@@ -1113,13 +1113,16 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isAutoPilot) {
-      // Se estiver em auto-piloto, para o auto-piloto
       setIsAutoPilot(false);
       return;
     }
 
+    // Não inicia drag do mapa se estiver arrastando um ponto
+    if (draggingPoint !== null) return;
+
     setIsDragging(true);
     setHasMoved(false);
+    lastMousePos.current = { x: e.clientX, y: e.clientY };
     lastMousePos.current = { x: e.clientX, y: e.clientY };
 
     // Inicia o timer para auto-piloto
@@ -1254,6 +1257,25 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   // Mouse events globais para capturar movimento fora do elemento
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
+      // Handle point dragging first
+      if (isAdmin && draggingPoint !== null) {
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const mouseX = e.clientX - rect.left - dragOffset.x;
+        const mouseY = e.clientY - rect.top - dragOffset.y;
+
+        const newX = Math.max(5, Math.min(95, (mouseX / rect.width) * 100));
+        const newY = Math.max(5, Math.min(95, (mouseY / rect.height) * 100));
+
+        const newPoints = points.map((p) =>
+          p.id === draggingPoint ? { ...p, x: newX, y: newY } : p,
+        );
+
+        setPoints(newPoints);
+        return;
+      }
+
       if (!isDragging) return;
 
       // Para o timer de auto-piloto se o mouse se mover
@@ -1349,6 +1371,14 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     };
 
     const handleGlobalMouseUp = () => {
+      // Handle point dragging end
+      if (isAdmin && draggingPoint !== null) {
+        savePoints(points);
+        setDraggingPoint(null);
+        setDragOffset({ x: 0, y: 0 });
+        return;
+      }
+
       setIsDragging(false);
       setIsHolding(false);
       setHoldProgress(0);
@@ -1369,7 +1399,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       );
     };
 
-    if (isDragging) {
+    if (isDragging || draggingPoint !== null) {
       document.addEventListener("mousemove", handleGlobalMouseMove);
       document.addEventListener("mouseup", handleGlobalMouseUp);
     }
@@ -1387,6 +1417,10 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     checkBarrierCollision,
     repelPlayer,
     showCollisionNotification,
+    draggingPoint,
+    dragOffset,
+    points,
+    isAdmin,
   ]);
 
   // Save points to localStorage
@@ -1558,7 +1592,15 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
       {/* Área de drag fixa - sempre cobre toda a tela */}
       <div
-        className={`absolute inset-0 z-5 ${isDragging ? "cursor-grabbing" : isAutoPilot ? "cursor-pointer" : "cursor-grab"}`}
+        className={`absolute inset-0 z-5 ${
+          draggingPoint !== null
+            ? "pointer-events-none"
+            : isDragging
+              ? "cursor-grabbing"
+              : isAutoPilot
+                ? "cursor-pointer"
+                : "cursor-grab"
+        }`}
         onMouseDown={handleMouseDown}
         onMouseMove={(e) => {
           handleMouseMove(e);
@@ -1618,14 +1660,15 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         {points.map((point) => (
           <div
             key={point.id}
-            className={`absolute z-20 transform -translate-x-1/2 -translate-y-1/2 ${
+            className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${
               isAdmin
                 ? "cursor-grab hover:cursor-grab active:cursor-grabbing"
                 : "cursor-pointer"
-            } ${draggingPoint === point.id ? "z-30" : ""}`}
+            } ${draggingPoint === point.id ? "z-50" : "z-30"}`}
             style={{
               left: `${point.x}%`,
               top: `${point.y}%`,
+              pointerEvents: "auto",
             }}
             onClick={() => handlePointClick(point)}
             onMouseDown={(e) => handlePointMouseDown(e, point)}
