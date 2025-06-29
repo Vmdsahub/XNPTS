@@ -1915,8 +1915,28 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     isAdmin,
   ]);
 
-  // Save points to localStorage
-  const savePoints = (newPoints: Point[]) => {
+  // Save points to database and localStorage as backup
+  const savePoints = async (newPoints: Point[]) => {
+    try {
+      // Update each world in the database if it has a string ID (from database)
+      const updatePromises = newPoints
+        .filter((point) => typeof point.id === "string")
+        .map((point) =>
+          gameService.updateGalaxyWorldPosition(
+            point.id as string,
+            point.x,
+            point.y,
+            point.scale || 1,
+          ),
+        );
+
+      await Promise.all(updatePromises);
+      console.log("✅ Posições salvas no banco de dados");
+    } catch (error) {
+      console.error("❌ Erro ao salvar no banco:", error);
+    }
+
+    // Always save to localStorage as backup
     localStorage.setItem("xenopets-galaxy-points", JSON.stringify(newPoints));
     setPoints(newPoints);
   };
