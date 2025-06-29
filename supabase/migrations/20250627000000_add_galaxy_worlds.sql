@@ -1,6 +1,6 @@
 /*
   # Galaxy Worlds Migration
-  
+
   Migrates galaxy map world positions from localStorage to database for proper persistence
 */
 
@@ -28,25 +28,25 @@ CREATE POLICY "Users can read galaxy worlds"
   TO authenticated
   USING (true);
 
--- Only admins can modify galaxy worlds  
+-- Only admins can modify galaxy worlds
 CREATE POLICY "Admins can modify galaxy worlds"
   ON galaxy_worlds FOR ALL
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM profiles 
-      WHERE profiles.id = auth.uid() 
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
       AND profiles.is_admin = true
     )
   );
 
 -- Insert default galaxy worlds
 INSERT INTO galaxy_worlds (name, image_url, x_position, y_position, scale, order_index) VALUES
-  ('Nexus Prime', 'https://cdn.builder.io/api/v1/image/assets%2F00527235c81749aeadef448eefcc705e%2Fa8f8439a99054a64b3fb9dd9c9f27e47?format=webp&width=200', 20, 30, 1.0, 1),
-  ('Terra Nova', 'https://cdn.builder.io/api/v1/image/assets%2F00527235c81749aeadef448eefcc705e%2F5b8b7e5f99054a64b3fb9dd9c9f27e47?format=webp&width=200', 70, 20, 1.0, 2),
-  ('Crimson Wastes', 'https://cdn.builder.io/api/v1/image/assets%2F00527235c81749aeadef448eefcc705e%2Fc9d8e6f809154b74a4gc0ee0d0f38f58?format=webp&width=200', 15, 75, 1.0, 3),
-  ('Azure Depths', 'https://cdn.builder.io/api/v1/image/assets%2F00527235c81749aeadef448eefcc705e%2Fd0e9f7g910264c85b5hd1ff1e1g49g69?format=webp&width=200', 85, 60, 1.0, 4),
-  ('Void Sanctum', 'https://cdn.builder.io/api/v1/image/assets%2F00527235c81749aeadef448eefcc705e%2Fe1f0g8h021374d96c6ie2gg2f2h50h70?format=webp&width=200', 50, 50, 1.0, 5);
+  ('Nexus Prime', 'https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2Fbd58c52f19d147f09ff36547a19e0305?format=webp&width=1600', 20, 30, 1.0, 1),
+  ('Terra Nova', 'https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2Fea3ec3d920794634bdf7d66a1159511b?format=webp&width=1600', 70, 20, 1.0, 2),
+  ('Crimson Wastes', 'https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2F7066e87a53b34231ac837e59befecf75?format=webp&width=1600', 15, 75, 1.0, 3),
+  ('Azure Depths', 'https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2F02782c34d2cd4353a884ab021ce35173?format=webp&width=1600', 85, 60, 1.0, 4),
+  ('Void Sanctum', 'https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2Facb3e8e8eb33422a88b01594f5d1c470?format=webp&width=1600', 50, 50, 1.0, 5);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_galaxy_worlds_updated_at()
