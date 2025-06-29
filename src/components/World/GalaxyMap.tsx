@@ -2440,26 +2440,26 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         {showShipModal && (
           <>
             <motion.div
-              className="fixed inset-0 bg-black/70 z-50"
+              className="fixed inset-0 bg-black/20 z-50"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowShipModal(false)}
             />
             <motion.div
-              className="fixed inset-0 flex items-center justify-center p-4 z-50"
-              initial={{ opacity: 0, scale: 0.9 }}
+              className="fixed inset-0 flex items-center justify-center p-2 sm:p-4 z-50"
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              exit={{ opacity: 0, scale: 0.95 }}
             >
-              <div className="bg-gradient-to-br from-slate-900 to-black rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-gray-700 relative">
+              <div className="bg-white rounded-3xl max-w-md sm:max-w-lg w-full shadow-2xl border border-gray-200 relative max-h-[95vh] overflow-y-auto">
                 {/* Botão de fechar */}
                 <button
                   onClick={() => setShowShipModal(false)}
-                  className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors z-10"
+                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors z-10 bg-white/80 backdrop-blur-sm"
                 >
                   <svg
-                    className="w-6 h-6 text-white"
+                    className="w-5 h-5 text-gray-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -2473,14 +2473,14 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                   </svg>
                 </button>
 
-                {/* Imagem grande da nave */}
-                <div className="text-center mb-6">
+                {/* Header com gradiente */}
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-3xl p-6 text-center border-b border-gray-100">
                   <motion.img
                     src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F35b6bdfaaf2f41f2882a22458f10917d?format=webp&width=800"
                     alt="Nave Mercante"
-                    className="w-48 h-48 mx-auto mb-4"
+                    className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4"
                     animate={{
-                      y: [0, -5, 0, 5, 0],
+                      y: [0, -3, 0, 3, 0],
                       rotate: [0, 1, 0, -1, 0],
                     }}
                     transition={{
@@ -2489,50 +2489,73 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                       ease: "easeInOut",
                     }}
                   />
-                </div>
-
-                {/* Texto de diálogo */}
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold text-cyan-300 mb-4">
-                    Nave Mercante do Sistema
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                    Capitão Zyx
                   </h2>
-                  <div className="bg-slate-800/50 rounded-2xl p-6 border border-cyan-500/30">
-                    <p className="text-lg text-cyan-100 leading-relaxed">
-                      "Olá, viajante! Sou o Capitão Zyx da nave mercante Estrela
-                      Errante. Navego por estas rotas comerciais há décadas,
-                      transportando recursos entre os planetas do sistema."
-                    </p>
-                    <p className="text-base text-cyan-200 mt-4">
-                      "Precisa de alguma coisa? Tenho suprimentos frescos de
-                      todas as dimensões!"
-                    </p>
-                  </div>
+                  <p className="text-sm sm:text-base text-blue-600 font-medium">
+                    Nave Mercante "Estrela Errante"
+                  </p>
                 </div>
 
-                {/* Área vazia para futuras funcionalidades */}
-                <div className="bg-slate-800/30 rounded-2xl p-8 border-2 border-dashed border-gray-600">
-                  <div className="text-center text-gray-400">
-                    <div className="w-16 h-16 bg-gray-700/50 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <svg
-                        className="w-8 h-8"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        />
-                      </svg>
+                {/* Conteúdo principal */}
+                <div className="p-6">
+                  {/* Texto de diálogo */}
+                  <div className="mb-6">
+                    <div className="bg-blue-50 rounded-2xl p-4 sm:p-6 border border-blue-200">
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm sm:text-base text-gray-700 leading-relaxed mb-3">
+                            "Olá, viajante! Sou o Capitão Zyx. Navego por estas
+                            rotas comerciais há décadas, transportando recursos
+                            entre os planetas do sistema."
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            "Precisa de alguma coisa? Tenho suprimentos frescos
+                            de todas as dimensões!"
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-sm">
-                      Área reservada para interações futuras
-                    </p>
-                    <p className="text-xs mt-2">
-                      Comércio • Missões • Informações
-                    </p>
+                  </div>
+
+                  {/* Área de ações futuras */}
+                  <div className="bg-gray-50 rounded-2xl p-6 border-2 border-dashed border-gray-300">
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto mb-3 flex items-center justify-center">
+                        <svg
+                          className="w-6 h-6 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium text-gray-600 mb-1">
+                        Área de Interação
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Comércio • Missões • Informações
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
