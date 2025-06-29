@@ -1724,9 +1724,9 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             onMouseDown={(e) => handlePointMouseDown(e, point)}
           >
             <div className="relative group">
-              {/* Planeta visual estilizado */}
+              {/* Imagem do planeta/estação */}
               <div
-                className={`w-20 h-20 transition-all duration-300 ${
+                className={`w-24 h-24 transition-all duration-300 ${
                   draggingPoint === point.id
                     ? "scale-110 brightness-110"
                     : "hover:scale-105 hover:brightness-110"
@@ -1738,66 +1738,34 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                       : "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))",
                 }}
               >
-                {/* Planeta estilizado baseado no tipo */}
-                <div
-                  className={`w-full h-full rounded-full flex items-center justify-center text-white font-bold text-sm relative overflow-hidden ${
-                    point.type === "forest"
-                      ? "bg-gradient-to-br from-green-400 to-green-700"
-                      : point.type === "ice"
-                        ? "bg-gradient-to-br from-blue-300 to-blue-600"
-                        : point.type === "desert"
-                          ? "bg-gradient-to-br from-yellow-400 to-orange-600"
-                          : point.type === "village"
-                            ? "bg-gradient-to-br from-emerald-400 to-green-600"
-                            : point.type === "alien"
-                              ? "bg-gradient-to-br from-purple-500 to-pink-600"
-                              : point.type === "station"
-                                ? "bg-gradient-to-br from-gray-400 to-gray-700"
-                                : "bg-gradient-to-br from-cyan-400 to-blue-600"
-                  }`}
-                >
-                  {/* Textura/padrão baseado no tipo */}
-                  {point.type === "forest" && (
-                    <div className="absolute inset-0 opacity-30">
-                      <div className="w-2 h-2 bg-green-800 rounded-full absolute top-2 left-3"></div>
-                      <div className="w-1 h-1 bg-green-900 rounded-full absolute top-4 right-2"></div>
-                      <div className="w-1.5 h-1.5 bg-green-800 rounded-full absolute bottom-3 left-2"></div>
-                    </div>
-                  )}
-                  {point.type === "ice" && (
-                    <div className="absolute inset-0 opacity-40">
-                      <div className="w-1 h-4 bg-white/60 absolute top-2 left-2 rotate-12"></div>
-                      <div className="w-1 h-3 bg-white/60 absolute top-3 right-3 -rotate-12"></div>
-                      <div className="w-6 h-0.5 bg-white/40 absolute bottom-4 left-1"></div>
-                    </div>
-                  )}
-                  {point.type === "desert" && (
-                    <div className="absolute inset-0 opacity-50">
-                      <div className="w-0 h-0 border-l-2 border-r-2 border-b-3 border-transparent border-b-yellow-700 absolute top-4 left-2"></div>
-                      <div className="w-0 h-0 border-l-1.5 border-r-1.5 border-b-2 border-transparent border-b-yellow-800 absolute top-5 right-3"></div>
-                    </div>
-                  )}
-                  {(point.type === "station" || point.type === "orbital") && (
-                    <div className="absolute inset-0 opacity-60">
-                      <div className="w-1 h-1 bg-yellow-300 rounded-full absolute top-2 left-2"></div>
-                      <div className="w-1 h-1 bg-yellow-300 rounded-full absolute top-3 right-2"></div>
-                      <div className="w-1 h-1 bg-cyan-300 rounded-full absolute bottom-2 left-3"></div>
-                      <div className="w-8 h-0.5 bg-gray-300 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-                    </div>
-                  )}
-
-                  {/* Ícone/letra central */}
-                  <span className="relative z-10 drop-shadow-lg">
-                    {point.label.charAt(0)}
-                  </span>
-
-                  {/* Brilho de atmosfera */}
-                  <div className="absolute inset-0 rounded-full bg-white/20 opacity-60"></div>
-                </div>
+                <img
+                  src={point.image}
+                  alt={point.label}
+                  className="w-full h-full object-contain"
+                  crossOrigin="anonymous"
+                  loading="eager"
+                  onLoad={(e) => {
+                    console.log(`Imagem carregada: ${point.label}`);
+                  }}
+                  onError={(e) => {
+                    console.error(
+                      `Erro ao carregar imagem: ${point.label}`,
+                      point.image,
+                    );
+                    // Tenta recarregar a imagem uma vez
+                    const img = e.target as HTMLImageElement;
+                    if (!img.dataset.retried) {
+                      img.dataset.retried = "true";
+                      setTimeout(() => {
+                        img.src = img.src; // Força reload
+                      }, 1000);
+                    }
+                  }}
+                />
 
                 {/* Brilho de seleção para admin */}
                 {draggingPoint === point.id && (
-                  <div className="absolute inset-0 rounded-full bg-yellow-400/30 animate-pulse"></div>
+                  <div className="absolute inset-0 rounded-lg bg-yellow-400/30 animate-pulse"></div>
                 )}
               </div>
 
