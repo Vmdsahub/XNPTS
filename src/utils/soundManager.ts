@@ -492,7 +492,7 @@ const createAutoPilotActivationSound = (): Promise<void> => {
 };
 
 export const playAutoPilotActivationSound = (): Promise<void> => {
-  return playAutoPilotActivationSound().catch((error) => {
+  return createAutoPilotActivationSound().catch((error) => {
     console.warn("Auto pilot activation sound failed:", error.message);
   });
 };
