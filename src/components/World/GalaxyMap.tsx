@@ -1846,6 +1846,24 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     setPoints(newPoints);
   };
 
+  // Animação da nave navegante dentro da barreira
+  useEffect(() => {
+    let animationId: number;
+
+    const animateWanderingShip = () => {
+      setWanderingShipAngle((prev) => (prev + 0.3) % 360); // Movimento lento
+      animationId = requestAnimationFrame(animateWanderingShip);
+    };
+
+    animationId = requestAnimationFrame(animateWanderingShip);
+
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, []);
+
   const handlePointClick = (point: Point) => {
     if (!isAdmin || draggingPoint !== null) return;
     console.log(`Clicou no ${point.label}`, point);
