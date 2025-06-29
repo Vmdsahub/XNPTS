@@ -351,7 +351,7 @@ class BackgroundMusicService {
 
   private createSpaceAmbient(ctx: AudioContext, config: any): void {
     // Cria ambiente espacial com ruído filtrado
-    const bufferSize = ctx.sampleRate * 60; // 60 segundos
+    const bufferSize = ctx.sampleRate * 180; // 180 segundos (3 minutos)
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
 
