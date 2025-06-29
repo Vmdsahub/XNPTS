@@ -1975,6 +1975,13 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
     const updateWanderingShip = () => {
       setWanderingShip((prev) => {
+        // Calcula distância do jogador (centro do mapa) para a nave
+        const centerX = 50;
+        const centerY = 50;
+        const dx = prev.x - centerX;
+        const dy = prev.y - centerY;
+        const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
+
         // Sistema de comportamentos
         if (prev.behavior === "paused") {
           if (prev.pauseTimer > 0) {
@@ -1983,6 +1990,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               pauseTimer: prev.pauseTimer - 1,
               isMoving: false,
               isPaused: true,
+              distanceToPlayer,
             };
           } else {
             // Acabou a pausa, volta a patrulhar
@@ -1993,6 +2001,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               behavior: "patrolling",
               progress: 0,
               isPaused: false,
+              isMoving: true,
+              distanceToPlayer,
             };
           }
         }
