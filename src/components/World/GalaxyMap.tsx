@@ -88,6 +88,7 @@ const createDefaultPoints = (): Point[] => {
       label: pointData[i].label,
       type: pointData[i].type,
       image: pointData[i].image,
+      scale: 1,
     });
   }
 
