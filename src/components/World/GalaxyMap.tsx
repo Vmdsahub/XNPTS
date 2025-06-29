@@ -2057,6 +2057,9 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
           handleMouseUp();
           handlePointMouseUp();
         }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{ backgroundColor: "transparent", userSelect: "none" }}
       />
 
