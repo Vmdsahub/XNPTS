@@ -250,6 +250,12 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     nextDirectionChange: 300 + Math.random() * 600, // 5-15 segundos para próxima mudança
     isMoving: true,
     distanceToPlayer: 100,
+    // Sistema de pausas nos mundos
+    isPaused: false,
+    pauseTimer: 0,
+    nearestWorldDistance: 100,
+    hasRecentlyPaused: false,
+    pauseCooldown: 0,
   });
 
   const mapRef = useRef<HTMLDivElement>(null);
