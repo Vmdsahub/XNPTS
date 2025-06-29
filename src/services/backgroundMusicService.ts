@@ -10,7 +10,35 @@ export interface MusicTrack {
 }
 
 class BackgroundMusicService {
-  private tracks: MusicTrack[] = [];
+  private tracks: MusicTrack[] = [
+    {
+      id: "galaxy-1",
+      name: "Trilha Galáctica 1",
+      path: "/sounds/galaxy-music-1.mp3",
+    },
+    {
+      id: "galaxy-2",
+      name: "Trilha Galáctica 2",
+      path: "/sounds/galaxy-music-2.mp3",
+    },
+    {
+      id: "galaxy-3",
+      name: "Trilha Galáctica 3",
+      path: "/sounds/galaxy-music-3.mp3",
+    },
+    {
+      id: "galaxy-4",
+      name: "Trilha Galáctica 4",
+      path: "/sounds/galaxy-music-4.mp3",
+    },
+    {
+      id: "galaxy-5",
+      name: "Trilha Galáctica 5",
+      path: "/sounds/galaxy-music-5.mp3",
+    },
+  ];
+
+  private originalTracks: MusicTrack[];
 
   private currentTrack: HTMLAudioElement | null = null;
   private currentTrackIndex: number = 0;
