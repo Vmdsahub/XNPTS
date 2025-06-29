@@ -837,7 +837,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
           ease: "easeOut",
         });
 
-        // Atualiza posição da nave correspondentemente
+        // Atualiza posi��ão da nave correspondentemente
         const repelShipX = (normalizedX * repelForce) / 12;
         const repelShipY = (normalizedY * repelForce) / 12;
 
@@ -2311,11 +2311,11 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
             >
-              <div className="bg-gradient-to-br from-slate-900 to-black rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-gray-700">
+              <div className="bg-gradient-to-br from-slate-900 to-black rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-gray-700 relative">
                 {/* Botão de fechar */}
                 <button
                   onClick={() => setShowShipModal(false)}
-                  className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors"
+                  className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors z-10"
                 >
                   <svg
                     className="w-6 h-6 text-white"
