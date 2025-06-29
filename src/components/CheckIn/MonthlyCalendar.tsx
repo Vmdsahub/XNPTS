@@ -75,7 +75,7 @@ export const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({
       reward = {
         type: "cash" as const,
         amount: 1,
-        icon: "https://cdn.builder.io/api/v1/image/assets%2Ff481900009a94cda953c032479392a30%2F8bb45b10e920461dae796f0f945a1b33?format=webp&width=800",
+        icon: "https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F38a7eab3791441c7bc853afba8904317?format=webp&width=800",
       };
     } else {
       // All other days: 100 Xenocoins

@@ -5,9 +5,19 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import { motion, useMotionValue, animate } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  animate,
+  AnimatePresence,
+} from "framer-motion";
 import { PlayerShip } from "./PlayerShip";
-import { playBarrierCollisionSound } from "../../utils/soundManager";
+import {
+  playBarrierCollisionSound,
+  playAutoPilotActivationSound,
+  startEngineSound,
+  stopEngineSound,
+} from "../../utils/soundManager";
 import { useAuthStore } from "../../store/authStore";
 
 interface GalaxyMapProps {}
@@ -171,6 +181,25 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   const [holdProgress, setHoldProgress] = useState(0);
   const [currentMousePos, setCurrentMousePos] = useState({ x: 0, y: 0 });
 
+  // Estados para a nave navegante
+  const [showShipModal, setShowShipModal] = useState(false);
+  const [wanderingShip, setWanderingShip] = useState({
+    x: 50, // posição relativa na barreira
+    y: 45,
+    targetX: 60,
+    targetY: 55,
+    controlX: 55, // ponto de controle para curva Bézier
+    controlY: 50,
+    rotation: 0,
+    targetRotation: 0,
+    isMoving: false,
+    isPaused: false,
+    pauseTimer: 0,
+    speed: 0.015, // ainda mais lento
+    progress: 0, // progresso na curva atual (0-1)
+    behavior: "patrolling", // 'patrolling', 'paused', 'investigating'
+  });
+
   const mapRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -315,7 +344,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   // Debug: log das posições iniciais
   useEffect(() => {
     console.log("🚀 Posição inicial da nave:", shipPosition);
-    console.log("🗺️ Posição inicial do mapa:", {
+    console.log("��️ Posição inicial do mapa:", {
       x: mapX.get(),
       y: mapY.get(),
     });
@@ -433,7 +462,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         const opacity = Math.min(1, (star.life / star.maxLife) * 1.2); // Mais luminosas
         const timeDelta = (currentTime - star.startTime) * 0.001;
 
-        // Animação de tamanho baseada em seno
+        // Animaç��o de tamanho baseada em seno
         const sizeVariation = 1 + Math.sin(timeDelta * 8) * 0.3; // Pulso mais intenso
         const currentSize = star.size * sizeVariation;
 
@@ -534,7 +563,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     const currentMapX = mapX.get();
     const currentMapY = mapY.get();
 
-    // Tempo atual para animações
+    // Tempo atual para anima��ões
     const currentTime = Date.now() * 0.001; // Converte para segundos
 
     const colors = [
@@ -747,7 +776,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Sistema de momentum/inércia
+  // Sistema de momentum/in��rcia
   useEffect(() => {
     velocityRef.current = velocity;
   }, [velocity]);
@@ -795,7 +824,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
 
-      // Calcula direção da repulsão (do centro da barreira para fora)
+      // Calcula direção da repuls��o (do centro da barreira para fora)
       const repelDirectionX = collisionX - centerX;
       const repelDirectionY = collisionY - centerY;
       const distance = Math.sqrt(
@@ -803,10 +832,10 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       );
 
       if (distance > 0) {
-        // Normaliza a direção e aplica força de repulsão
+        // Normaliza a direç��o e aplica força de repulsão
         const normalizedX = repelDirectionX / distance;
         const normalizedY = repelDirectionY / distance;
-        const repelForce = 15; // Força da repulsão
+        const repelForce = 15; // For��a da repulsão
 
         // Para o movimento atual imediatamente
         setVelocity({ x: 0, y: 0 });
@@ -1000,7 +1029,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     showCollisionNotification,
   ]);
 
-  // Sistema de rastreamento do mouse durante auto-piloto
+  // Sistema de rastreamento do mouse/touch durante auto-piloto
   useEffect(() => {
     if (!isAutoPilot) return;
 
@@ -1009,10 +1038,21 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       updateAutoPilotDirection(e.clientX, e.clientY);
     };
 
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (touch) {
+        setCurrentMousePos({ x: touch.clientX, y: touch.clientY });
+        updateAutoPilotDirection(touch.clientX, touch.clientY);
+        e.preventDefault();
+      }
+    };
+
     document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("touchmove", handleTouchMove);
     };
   }, [isAutoPilot, updateAutoPilotDirection]);
 
@@ -1171,6 +1211,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         setIsHolding(false);
         setHoldProgress(0);
         setHoldStartTime(null);
+        // Reproduz som de ativação
+        playAutoPilotActivationSound();
       } else if (isHolding) {
         animationId = requestAnimationFrame(updateProgress);
       }
@@ -1197,7 +1239,6 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     setIsDragging(true);
     setHasMoved(false);
     lastMousePos.current = { x: e.clientX, y: e.clientY };
-    lastMousePos.current = { x: e.clientX, y: e.clientY };
 
     // Inicia o timer para auto-piloto
     const startTime = Date.now();
@@ -1207,6 +1248,35 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
     // Calcula direção inicial para auto-piloto
     updateAutoPilotDirection(e.clientX, e.clientY);
+
+    e.preventDefault();
+  };
+
+  // Touch event handlers para dispositivos móveis
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isAutoPilot) {
+      setIsAutoPilot(false);
+      return;
+    }
+
+    // Não inicia drag do mapa se estiver arrastando um ponto
+    if (draggingPoint !== null) return;
+
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    setIsDragging(true);
+    setHasMoved(false);
+    lastMousePos.current = { x: touch.clientX, y: touch.clientY };
+
+    // Inicia o timer para auto-piloto
+    const startTime = Date.now();
+    setHoldStartTime(startTime);
+    setIsHolding(true);
+    setHoldProgress(0);
+
+    // Calcula direção inicial para auto-piloto
+    updateAutoPilotDirection(touch.clientX, touch.clientY);
 
     e.preventDefault();
   };
@@ -1307,6 +1377,96 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     lastMoveTime.current = currentTime;
   };
 
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    // Para o timer de auto-piloto se o touch se mover
+    if (isHolding) {
+      setIsHolding(false);
+      setHoldProgress(0);
+      setHoldStartTime(null);
+    }
+
+    const currentTime = Date.now();
+    const deltaTime = currentTime - lastMoveTime.current;
+    const deltaX = touch.clientX - lastMousePos.current.x;
+    const deltaY = touch.clientY - lastMousePos.current.y;
+
+    // Momentum suavizado baseado no movimento
+    if (deltaTime > 0) {
+      const velX = Math.max(-1.5, Math.min(1.5, deltaX * 0.08));
+      const velY = Math.max(-1.5, Math.min(1.5, deltaY * 0.08));
+      setVelocity({ x: velX, y: velY });
+    }
+
+    // Calcula nova posição proposta
+    const proposedX = wrap(
+      shipPosRef.current.x - deltaX / 12,
+      0,
+      WORLD_CONFIG.width,
+    );
+    const proposedY = wrap(
+      shipPosRef.current.y - deltaY / 12,
+      0,
+      WORLD_CONFIG.height,
+    );
+
+    // Sistema de detecção de colisão
+    const collision = checkCollisionWithBarriers(proposedX, proposedY);
+    const allowMovement = !collision.isColliding;
+
+    if (collision.isColliding && !isColliding) {
+      setIsColliding(true);
+      playBarrierCollisionSound();
+      showCollisionNotification(collision.nearestPointId);
+    } else if (!collision.isColliding && isColliding) {
+      setIsColliding(false);
+    }
+
+    // Atualiza posição da nave
+    const newX = allowMovement ? proposedX : shipPosRef.current.x;
+    const newY = allowMovement ? proposedY : shipPosRef.current.y;
+
+    if (newX !== shipPosRef.current.x || newY !== shipPosRef.current.y) {
+      setShipPosition({ x: newX, y: newY });
+    }
+
+    setShipPosition({ x: newX, y: newY });
+
+    // Só atualiza mapa visual se movimento é permitido
+    if (allowMovement) {
+      // Atualiza mapa visual com wrap
+      let newMapX = mapX.get() + deltaX;
+      let newMapY = mapY.get() + deltaY;
+
+      // Wrap visual do mapa expandido
+      const wrapThreshold = 5000;
+      if (newMapX > wrapThreshold) newMapX -= wrapThreshold * 2;
+      if (newMapX < -wrapThreshold) newMapX += wrapThreshold * 2;
+      if (newMapY > wrapThreshold) newMapY -= wrapThreshold * 2;
+      if (newMapY < -wrapThreshold) newMapY += wrapThreshold * 2;
+
+      mapX.set(newMapX);
+      mapY.set(newMapY);
+    }
+
+    // Rotação responsiva com interpolação suave
+    if (Math.sqrt(deltaX * deltaX + deltaY * deltaY) > 1) {
+      setHasMoved(true);
+      const newAngle = Math.atan2(-deltaY, -deltaX) * (180 / Math.PI) + 90;
+      targetRotation.current = newAngle;
+      lastRotationUpdate.current = Date.now();
+    }
+
+    lastMousePos.current = { x: touch.clientX, y: touch.clientY };
+    lastMoveTime.current = currentTime;
+
+    e.preventDefault();
+  };
+
   const handleMouseUp = () => {
     setIsDragging(false);
     setIsHolding(false);
@@ -1314,6 +1474,27 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     setHoldStartTime(null);
 
     // Se não moveu (apenas clique), para completamente
+    if (!hasMoved) {
+      setVelocity({ x: 0, y: 0 });
+      setIsDecelerating(false);
+    }
+
+    localStorage.setItem(
+      "xenopets-player-data",
+      JSON.stringify({
+        ship: shipPosRef.current,
+        map: { x: mapX.get(), y: mapY.get() },
+      }),
+    );
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    setIsHolding(false);
+    setHoldProgress(0);
+    setHoldStartTime(null);
+
+    // Se não moveu (apenas toque), para completamente
     if (!hasMoved) {
       setVelocity({ x: 0, y: 0 });
       setIsDecelerating(false);
@@ -1499,14 +1680,172 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       );
     };
 
+    // Touch event handlers globais
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      // Handle point resizing first
+      if (isAdmin && resizingPoint !== null) {
+        const deltaY = touch.clientY - resizeStartY;
+        const scaleFactor = 1 + deltaY * 0.002;
+        const newScale = Math.max(
+          0.5,
+          Math.min(3, resizeStartScale * scaleFactor),
+        );
+
+        const newPoints = points.map((p) =>
+          p.id === resizingPoint ? { ...p, scale: newScale } : p,
+        );
+        setPoints(newPoints);
+        return;
+      }
+
+      // Handle point dragging
+      if (isAdmin && draggingPoint !== null) {
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const touchX = touch.clientX - rect.left - dragOffset.x;
+        const touchY = touch.clientY - rect.top - dragOffset.y;
+
+        const newX = Math.max(5, Math.min(95, (touchX / rect.width) * 100));
+        const newY = Math.max(5, Math.min(95, (touchY / rect.height) * 100));
+
+        const newPoints = points.map((p) =>
+          p.id === draggingPoint ? { ...p, x: newX, y: newY } : p,
+        );
+        setPoints(newPoints);
+        return;
+      }
+
+      // Para o timer de auto-piloto se o touch se mover
+      if (isHolding) {
+        setIsHolding(false);
+        setHoldProgress(0);
+        setHoldStartTime(null);
+      }
+
+      const currentTime = Date.now();
+      const deltaTime = currentTime - lastMoveTime.current;
+      const deltaX = touch.clientX - lastMousePos.current.x;
+      const deltaY = touch.clientY - lastMousePos.current.y;
+
+      if (deltaTime > 0) {
+        const velX = Math.max(-1.5, Math.min(1.5, deltaX * 0.08));
+        const velY = Math.max(-1.5, Math.min(1.5, deltaY * 0.08));
+        setVelocity({ x: velX, y: velY });
+      }
+
+      const proposedX = wrap(
+        shipPosRef.current.x - deltaX / 12,
+        0,
+        WORLD_CONFIG.width,
+      );
+      const proposedY = wrap(
+        shipPosRef.current.y - deltaY / 12,
+        0,
+        WORLD_CONFIG.height,
+      );
+
+      const collision = checkBarrierCollision(proposedX, proposedY, points);
+      let allowMovement = !collision.isColliding;
+      let newX = proposedX;
+      let newY = proposedY;
+
+      if (collision.isColliding) {
+        repelPlayer(collision);
+        playBarrierCollisionSound();
+        showCollisionNotification();
+        newX = shipPosRef.current.x;
+        newY = shipPosRef.current.y;
+        allowMovement = false;
+        setVelocity({ x: 0, y: 0 });
+        setIsDecelerating(false);
+      }
+
+      setShipPosition({ x: newX, y: newY });
+
+      // Só atualiza mapa visual se movimento é permitido
+      if (allowMovement) {
+        let newMapX = mapX.get() + deltaX;
+        let newMapY = mapY.get() + deltaY;
+
+        const wrapThreshold = 5000;
+        if (newMapX > wrapThreshold) newMapX -= wrapThreshold * 2;
+        if (newMapX < -wrapThreshold) newMapX += wrapThreshold * 2;
+        if (newMapY > wrapThreshold) newMapY -= wrapThreshold * 2;
+        if (newMapY < -wrapThreshold) newMapY += wrapThreshold * 2;
+
+        mapX.set(newMapX);
+        mapY.set(newMapY);
+      }
+
+      if (Math.sqrt(deltaX * deltaX + deltaY * deltaY) > 1) {
+        setHasMoved(true);
+        const newAngle = Math.atan2(-deltaY, -deltaX) * (180 / Math.PI) + 90;
+        targetRotation.current = newAngle;
+        lastRotationUpdate.current = Date.now();
+      }
+
+      lastMousePos.current = { x: touch.clientX, y: touch.clientY };
+      lastMoveTime.current = currentTime;
+
+      e.preventDefault();
+    };
+
+    const handleGlobalTouchEnd = () => {
+      // Handle point resizing end
+      if (isAdmin && resizingPoint !== null) {
+        savePoints(points);
+        setResizingPoint(null);
+        setResizeStartScale(1);
+        setResizeStartY(0);
+        return;
+      }
+
+      // Handle point dragging end
+      if (isAdmin && draggingPoint !== null) {
+        savePoints(points);
+        setDraggingPoint(null);
+        setDragOffset({ x: 0, y: 0 });
+        return;
+      }
+
+      setIsDragging(false);
+      setIsHolding(false);
+      setHoldProgress(0);
+      setHoldStartTime(null);
+
+      // Se não moveu (apenas toque), para completamente
+      if (!hasMoved) {
+        setVelocity({ x: 0, y: 0 });
+        setIsDecelerating(false);
+      }
+
+      localStorage.setItem(
+        "xenopets-player-data",
+        JSON.stringify({
+          ship: shipPosRef.current,
+          map: { x: mapX.get(), y: mapY.get() },
+        }),
+      );
+    };
+
     if (isDragging || draggingPoint !== null) {
       document.addEventListener("mousemove", handleGlobalMouseMove);
       document.addEventListener("mouseup", handleGlobalMouseUp);
+      document.addEventListener("touchmove", handleGlobalTouchMove, {
+        passive: false,
+      });
+      document.addEventListener("touchend", handleGlobalTouchEnd);
     }
 
     return () => {
       document.removeEventListener("mousemove", handleGlobalMouseMove);
       document.removeEventListener("mouseup", handleGlobalMouseUp);
+      document.removeEventListener("touchmove", handleGlobalTouchMove);
+      document.removeEventListener("touchend", handleGlobalTouchEnd);
     };
   }, [
     isDragging,
@@ -1528,6 +1867,179 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     localStorage.setItem("xenopets-galaxy-points", JSON.stringify(newPoints));
     setPoints(newPoints);
   };
+
+  // Sistema de navegação inteligente com curvas suaves
+  useEffect(() => {
+    let animationId: number;
+
+    const generateNewRoute = () => {
+      // Gera um ponto aleatório dentro da barreira circular
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.random() * 25 + 15; // Entre 15% e 40% do raio
+
+      const targetX = 50 + Math.cos(angle) * radius;
+      const targetY = 50 + Math.sin(angle) * radius;
+
+      // Gera ponto de controle para curva Bézier (offset perpendicular)
+      const controlAngle = angle + (Math.random() - 0.5) * Math.PI * 0.6; // Variação de até 54°
+      const controlRadius = radius * (0.3 + Math.random() * 0.4); // 30-70% da distância
+      const controlX = 50 + Math.cos(controlAngle) * controlRadius;
+      const controlY = 50 + Math.sin(controlAngle) * controlRadius;
+
+      return { targetX, targetY, controlX, controlY };
+    };
+
+    // Função de interpolação de curva Bézier quadrática
+    const bezierInterpolate = (start, control, end, t) => {
+      const oneMinusT = 1 - t;
+      return (
+        oneMinusT * oneMinusT * start +
+        2 * oneMinusT * t * control +
+        t * t * end
+      );
+    };
+
+    const updateWanderingShip = () => {
+      setWanderingShip((prev) => {
+        // Sistema de comportamentos
+        if (prev.behavior === "paused") {
+          if (prev.pauseTimer > 0) {
+            return {
+              ...prev,
+              pauseTimer: prev.pauseTimer - 1,
+              isMoving: false,
+              isPaused: true,
+            };
+          } else {
+            // Acabou a pausa, volta a patrulhar
+            const route = generateNewRoute();
+            return {
+              ...prev,
+              ...route,
+              behavior: "patrolling",
+              progress: 0,
+              isPaused: false,
+            };
+          }
+        }
+
+        // Sistema de movimento com curva Bézier
+        if (prev.behavior === "patrolling") {
+          // Incrementa progresso na curva
+          const newProgress = prev.progress + prev.speed;
+
+          if (newProgress >= 1) {
+            // Chegou ao destino - decide próxima ação
+            const rand = Math.random();
+            if (rand < 0.3) {
+              // 30% chance de pausar
+              return {
+                ...prev,
+                behavior: "paused",
+                pauseTimer: 60 + Math.random() * 120, // 1-3 segundos a 60fps
+                isMoving: false,
+                isPaused: true,
+                progress: 0,
+              };
+            } else {
+              // 70% chance de continuar patrulhando
+              const route = generateNewRoute();
+              return {
+                ...prev,
+                ...route,
+                progress: 0,
+                isMoving: true,
+              };
+            }
+          }
+
+          // Calcula posição na curva Bézier
+          const newX = bezierInterpolate(
+            prev.x,
+            prev.controlX,
+            prev.targetX,
+            newProgress,
+          );
+          const newY = bezierInterpolate(
+            prev.y,
+            prev.controlY,
+            prev.targetY,
+            newProgress,
+          );
+
+          // Calcula direção do movimento para rotação suave
+          const futureProgress = Math.min(newProgress + 0.05, 1);
+          const futureX = bezierInterpolate(
+            prev.x,
+            prev.controlX,
+            prev.targetX,
+            futureProgress,
+          );
+          const futureY = bezierInterpolate(
+            prev.y,
+            prev.controlY,
+            prev.targetY,
+            futureProgress,
+          );
+
+          const dx = futureX - newX;
+          const dy = futureY - newY;
+
+          if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
+            const targetRotation = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+
+            // Interpolação suave da rotação
+            let rotationDiff = targetRotation - prev.rotation;
+            if (rotationDiff > 180) rotationDiff -= 360;
+            if (rotationDiff < -180) rotationDiff += 360;
+
+            const newRotation = prev.rotation + rotationDiff * 0.08; // Rotação mais responsiva
+
+            return {
+              ...prev,
+              x: newX,
+              y: newY,
+              rotation: newRotation,
+              progress: newProgress,
+              isMoving: true,
+              isPaused: false,
+            };
+          }
+        }
+
+        return prev;
+      });
+
+      animationId = requestAnimationFrame(updateWanderingShip);
+    };
+
+    // Inicializa com uma rota
+    const route = generateNewRoute();
+    setWanderingShip((prev) => ({
+      ...prev,
+      ...route,
+      progress: 0,
+      behavior: "patrolling",
+      isMoving: true,
+    }));
+
+    animationId = requestAnimationFrame(updateWanderingShip);
+
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, []);
+
+  // Sistema de som para nave mercante
+  useEffect(() => {
+    if (wanderingShip.isMoving && !wanderingShip.isPaused) {
+      startEngineSound();
+    } else {
+      stopEngineSound();
+    }
+  }, [wanderingShip.isMoving, wanderingShip.isPaused]);
 
   const handlePointClick = (point: Point) => {
     if (!isAdmin || draggingPoint !== null) return;
@@ -1562,6 +2074,30 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     setDragOffset({
       x: mouseX - pointX,
       y: mouseY - pointY,
+    });
+  };
+
+  const handlePointTouchStart = (e: React.TouchEvent, point: Point) => {
+    if (!isAdmin) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const touchX = touch.clientX - rect.left;
+    const touchY = touch.clientY - rect.top;
+    const pointX = (point.x / 100) * rect.width;
+    const pointY = (point.y / 100) * rect.height;
+
+    setDraggingPoint(point.id);
+    setDragOffset({
+      x: touchX - pointX,
+      y: touchY - pointY,
     });
   };
 
@@ -1629,6 +2165,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         handleMouseUp();
         handlePointMouseUp();
       }}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Simple progress bar for auto-pilot activation */}
       {isHolding && holdProgress > 0 && (
@@ -1649,7 +2187,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         </motion.div>
       )}
 
-      {/* Notificação de Colisão - Centralizada no topo do mapa */}
+      {/* Notificação de Colis��o - Centralizada no topo do mapa */}
       {collisionNotification.show && (
         <div className="absolute top-4 left-0 right-0 z-50 flex justify-center">
           <motion.div
@@ -1718,6 +2256,9 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
           handleMouseUp();
           handlePointMouseUp();
         }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{ backgroundColor: "transparent", userSelect: "none" }}
       />
 
@@ -1763,6 +2304,115 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               },
             }}
           />
+
+          {/* Nave mercante navegante dentro da barreira */}
+          <motion.div
+            className="absolute cursor-pointer z-20"
+            style={{
+              left: `${wanderingShip.x}%`,
+              top: `${wanderingShip.y}%`,
+              transform: `translate(-50%, -50%)`,
+              pointerEvents: "auto",
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowShipModal(true);
+            }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <motion.div
+              className="relative w-10 h-10"
+              style={{ rotate: wanderingShip.rotation }}
+              animate={{
+                scale: wanderingShip.isMoving
+                  ? 1.05
+                  : wanderingShip.isPaused
+                    ? 0.95
+                    : 1,
+                // Vibração quando se movendo, pulsação quando pausado, flutuação quando normal
+                y: wanderingShip.isMoving
+                  ? [0, -0.5, 0, 0.5, 0]
+                  : wanderingShip.isPaused
+                    ? [0, -1, 0, 1, 0]
+                    : [0, -2, 0, 2, 0],
+                x: wanderingShip.isMoving
+                  ? [0, 0.5, 0, -0.5, 0]
+                  : wanderingShip.isPaused
+                    ? [0, 0.5, 0, -0.5, 0]
+                    : [0, 1.5, 0, -1.5, 0],
+              }}
+              transition={{
+                scale: { type: "spring", stiffness: 300, damping: 30 },
+                y: {
+                  duration: wanderingShip.isMoving
+                    ? 0.15
+                    : wanderingShip.isPaused
+                      ? 1.5
+                      : 2.2,
+                  repeat: Infinity,
+                  ease: wanderingShip.isMoving ? "linear" : "easeInOut",
+                },
+                x: {
+                  duration: wanderingShip.isMoving
+                    ? 0.12
+                    : wanderingShip.isPaused
+                      ? 1.8
+                      : 2.8,
+                  repeat: Infinity,
+                  ease: wanderingShip.isMoving ? "linear" : "easeInOut",
+                },
+              }}
+            >
+              {/* Imagem da nave mercante */}
+              <motion.img
+                src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F35b6bdfaaf2f41f2882a22458f10917d?format=webp&width=800"
+                alt="Nave Mercante"
+                className="w-full h-full object-contain drop-shadow-lg"
+              />
+
+              {/* Trilha de propulsão - apenas quando realmente se movendo (não pausado) */}
+              {wanderingShip.isMoving && !wanderingShip.isPaused && (
+                <>
+                  <motion.div
+                    className="absolute w-0.5 h-6 bg-gradient-to-t from-transparent to-orange-400 transform -translate-x-1/2"
+                    style={{
+                      top: "calc(100% - 12px)",
+                      left: "calc(50% - 1px)",
+                      zIndex: -1,
+                    }}
+                    animate={{
+                      opacity: [0.3, 0.8, 0.3],
+                      scaleY: [0.5, 1, 0.5],
+                    }}
+                    transition={{
+                      duration: 0.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                  <motion.div
+                    className="absolute w-0.5 h-5 bg-gradient-to-t from-transparent to-yellow-300 transform -translate-x-1/2"
+                    style={{
+                      top: "calc(100% - 8px)",
+                      left: "calc(50% - 1px)",
+                      zIndex: -1,
+                    }}
+                    animate={{
+                      opacity: [0.2, 0.6, 0.2],
+                      scaleY: [0.3, 1, 0.3],
+                    }}
+                    transition={{
+                      duration: 0.3,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 0.1,
+                    }}
+                  />
+                </>
+              )}
+            </motion.div>
+          </motion.div>
         </div>
         {/* Novos pontos clicáveis */}
         {points.map((point) => (
@@ -1780,6 +2430,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             }}
             onClick={() => handlePointClick(point)}
             onMouseDown={(e) => handlePointMouseDown(e, point)}
+            onTouchStart={(e) => handlePointTouchStart(e, point)}
             animate={{
               y: [0, -5 - point.id * 0.8, 0, 3.5 + point.id * 0.5, 0],
               x: [0, 2 + point.id * 0.4, 0, -2.5 - point.id * 0.3, 0],
@@ -1891,6 +2542,135 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
           isDecelerating={isDecelerating}
         />
       </div>
+
+      {/* Modal da Nave Navegante */}
+      <AnimatePresence>
+        {showShipModal && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black/20 z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowShipModal(false)}
+            />
+            <motion.div
+              className="fixed inset-0 flex items-center justify-center p-2 sm:p-4 z-50"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <div className="bg-white rounded-3xl max-w-md sm:max-w-lg w-full shadow-2xl border border-gray-200 relative max-h-[95vh] overflow-y-auto">
+                {/* Botão de fechar */}
+                <button
+                  onClick={() => setShowShipModal(false)}
+                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors z-10 bg-white/80 backdrop-blur-sm"
+                >
+                  <svg
+                    className="w-5 h-5 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+
+                {/* Header com gradiente */}
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-3xl p-6 text-center border-b border-gray-100">
+                  <motion.img
+                    src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F35b6bdfaaf2f41f2882a22458f10917d?format=webp&width=800"
+                    alt="Nave Mercante"
+                    className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4"
+                    animate={{
+                      y: [0, -3, 0, 3, 0],
+                      rotate: [0, 1, 0, -1, 0],
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                    Capitão Zyx
+                  </h2>
+                  <p className="text-sm sm:text-base text-blue-600 font-medium">
+                    Nave Mercante "Estrela Errante"
+                  </p>
+                </div>
+
+                {/* Conteúdo principal */}
+                <div className="p-6">
+                  {/* Texto de diálogo */}
+                  <div className="mb-6">
+                    <div className="bg-blue-50 rounded-2xl p-4 sm:p-6 border border-blue-200">
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm sm:text-base text-gray-700 leading-relaxed mb-3">
+                            "Olá, viajante! Sou o Capitão Zyx. Navego por estas
+                            rotas comerciais há décadas, transportando recursos
+                            entre os planetas do sistema."
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            "Precisa de alguma coisa? Tenho suprimentos frescos
+                            de todas as dimensões!"
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Área de ações futuras */}
+                  <div className="bg-gray-50 rounded-2xl p-6 border-2 border-dashed border-gray-300">
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto mb-3 flex items-center justify-center">
+                        <svg
+                          className="w-6 h-6 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium text-gray-600 mb-1">
+                        Área de Interação
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Comércio • Missões • Informações
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Coordenadas simplificadas na parte inferior */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/20 text-xs font-mono font-thin whitespace-nowrap">
