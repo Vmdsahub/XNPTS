@@ -57,6 +57,7 @@ class BackgroundMusicService {
   private isUsingSynthetic: boolean = false;
 
   constructor() {
+    console.log("🎵 Inicializando BackgroundMusicService...");
     this.originalTracksCount = this.tracks.length;
     this.preloadTracks();
   }
