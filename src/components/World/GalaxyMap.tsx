@@ -18,14 +18,62 @@ interface Point {
   x: number;
   y: number;
   label: string;
+  image: string;
+  type: string;
 }
 
 // 7 pontos distribuídos em círculo ao redor do centro
 const createDefaultPoints = (): Point[] => {
-  const points: Point[] = [];
   const centerX = 50;
   const centerY = 50;
   const radius = 20;
+
+  const pointData = [
+    {
+      label: "Gaia Selvagem",
+      type: "forest",
+      image:
+        "https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2Fbd58c52f19d147f09ff36547a19e0305?format=webp&width=800",
+    },
+    {
+      label: "Mundo Gelado",
+      type: "ice",
+      image:
+        "https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2Fea3ec3d920794634bdf7d66a1159511b?format=webp&width=800",
+    },
+    {
+      label: "Reino Desértico",
+      type: "desert",
+      image:
+        "https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2F7066e87a53b34231ac837e59befecf75?format=webp&width=800",
+    },
+    {
+      label: "Aldeia Pacífica",
+      type: "village",
+      image:
+        "https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2F02782c34d2cd4353a884ab021ce35173?format=webp&width=800",
+    },
+    {
+      label: "Dimensão Alienígena",
+      type: "alien",
+      image:
+        "https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2Facb3e8e8eb33422a88b01594f5d1c470?format=webp&width=800",
+    },
+    {
+      label: "Estação Mineradora",
+      type: "station",
+      image:
+        "https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2F213c17a38e9545088415b03b5c9e9319?format=webp&width=800",
+    },
+    {
+      label: "Estação Orbital",
+      type: "orbital",
+      image:
+        "https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2F5df1481617e34873b681fc3061c5a759?format=webp&width=800",
+    },
+  ];
+
+  const points: Point[] = [];
 
   for (let i = 0; i < 7; i++) {
     const angle = (i * 2 * Math.PI) / 7;
@@ -36,7 +84,9 @@ const createDefaultPoints = (): Point[] => {
       id: i + 1,
       x: Math.max(10, Math.min(90, x)),
       y: Math.max(10, Math.min(90, y)),
-      label: `Setor ${i + 1}`,
+      label: pointData[i].label,
+      type: pointData[i].type,
+      image: pointData[i].image,
     });
   }
 
@@ -1636,7 +1686,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             zIndex: 5,
           }}
         >
-          {/* Animação de rotação continua */}
+          {/* Animação de rotaç��o continua */}
           <motion.div
             className="w-full h-full rounded-full border-2 border-dashed"
             style={{
@@ -1674,34 +1724,56 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             onMouseDown={(e) => handlePointMouseDown(e, point)}
           >
             <div className="relative group">
-              {/* Ponto principal */}
+              {/* Imagem do planeta/estação */}
               <div
-                className={`w-4 h-4 rounded-full border-2 border-white shadow-lg transition-all duration-200 ${
+                className={`w-16 h-16 transition-all duration-300 ${
                   draggingPoint === point.id
-                    ? "bg-yellow-400 scale-125"
-                    : isAdmin
-                      ? "bg-blue-400 hover:bg-blue-300 hover:scale-125"
-                      : "bg-blue-400 hover:bg-blue-300 hover:scale-125"
+                    ? "scale-110 brightness-110"
+                    : "hover:scale-105 hover:brightness-110"
                 }`}
+                style={{
+                  filter:
+                    draggingPoint === point.id
+                      ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8))"
+                      : "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))",
+                }}
               >
-                {draggingPoint !== point.id && (
-                  <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-75"></div>
+                <img
+                  src={point.image}
+                  alt={point.label}
+                  className="w-full h-full object-contain"
+                  style={{
+                    imageRendering: "crisp-edges",
+                  }}
+                />
+
+                {/* Brilho de seleção para admin */}
+                {draggingPoint === point.id && (
+                  <div className="absolute inset-0 rounded-full bg-yellow-400/30 animate-pulse"></div>
                 )}
               </div>
 
               {/* Admin indicator */}
               {isAdmin && (
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full border border-white opacity-60"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-white opacity-80 shadow-lg">
+                  <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
+                </div>
               )}
 
-              {/* Tooltip */}
-              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                {point.label}
+              {/* Tooltip melhorado */}
+              <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-gradient-to-br from-gray-900 to-black text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-gray-600 shadow-xl">
+                <div className="font-bold text-cyan-300">{point.label}</div>
+                <div className="text-gray-300 text-xs capitalize">
+                  {point.type}
+                </div>
                 {isAdmin && (
-                  <div className="text-yellow-400 text-xs">
-                    Arraste para mover
+                  <div className="text-yellow-400 text-xs mt-1">
+                    ⚡ Arraste para mover
                   </div>
                 )}
+
+                {/* Tooltip arrow */}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
               </div>
             </div>
           </div>
