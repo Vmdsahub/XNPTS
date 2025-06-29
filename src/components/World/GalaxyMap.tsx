@@ -1695,10 +1695,10 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       lastMoveTime.current = currentTime;
     };
 
-    const handleGlobalMouseUp = () => {
+    const handleGlobalMouseUp = async () => {
       // Handle point resizing end
       if (isAdmin && resizingPoint !== null) {
-        savePoints(points);
+        await savePoints(points);
         setResizingPoint(null);
         setResizeStartScale(1);
         setResizeStartY(0);
@@ -1707,7 +1707,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
       // Handle point dragging end
       if (isAdmin && draggingPoint !== null) {
-        savePoints(points);
+        await savePoints(points);
         setDraggingPoint(null);
         setDragOffset({ x: 0, y: 0 });
         return;
