@@ -1955,7 +1955,18 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       return angle;
     };
 
+    let lastUpdateTime = Date.now();
+    const targetFPS = 30; // Limit to 30 FPS instead of 60 for better performance
+    const frameInterval = 1000 / targetFPS;
+
     const updateWanderingShip = () => {
+      const now = Date.now();
+      if (now - lastUpdateTime < frameInterval) {
+        animationId = requestAnimationFrame(updateWanderingShip);
+        return;
+      }
+      lastUpdateTime = now;
+
       setWanderingShip((prev) => {
         // Calcula distância do jogador (centro do mapa) para a nave
         const centerX = 50;
@@ -2801,7 +2812,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                   <motion.img
                     src="https://cdn.builder.io/api/v1/image/assets%2Fcd7f7270636644acbedf48e0ef62abd0%2F9b01dc80171f480d8fb5a342061dde24?format=webp&width=800"
                     alt="Nave Mercante"
-                    className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4"
+                    className="w-32 h-32 sm:w-48 sm:h-48 mx-auto mb-4"
                     animate={{
                       y: [0, -3, 0, 3, 0],
                       rotate: [0, 1, 0, -1, 0],
