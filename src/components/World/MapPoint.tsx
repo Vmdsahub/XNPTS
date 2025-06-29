@@ -90,6 +90,18 @@ export const MapPoint: React.FC<MapPointProps> = ({
   const Icon = getPointIcon(point.type);
   const colors = getPointColor(point.type, point.id);
 
+  // Generate unique floating animation parameters for each point
+  const floatingParams = React.useMemo(
+    () => ({
+      yOffset: 3 + Math.random() * 4, // 3-7px floating range
+      duration: 3 + Math.random() * 2, // 3-5 second duration
+      delay: Math.random() * 3, // 0-3 second delay
+      rotationRange: 1 + Math.random() * 2, // 1-3 degree rotation
+      rotationDuration: 4 + Math.random() * 4, // 4-8 second rotation
+    }),
+    [point.id],
+  );
+
   return (
     <motion.div
       className={`absolute z-10 ${isDragging ? "pointer-events-none" : "cursor-pointer"}`}
@@ -101,15 +113,40 @@ export const MapPoint: React.FC<MapPointProps> = ({
       animate={{
         opacity: 1,
         scale: 1,
+        y: [-floatingParams.yOffset, floatingParams.yOffset],
+        rotate: [-floatingParams.rotationRange, floatingParams.rotationRange],
         filter: isNearby
           ? `drop-shadow(0 0 12px ${colors.glow})`
           : `drop-shadow(0 0 6px ${colors.glow})`,
       }}
       transition={{
-        type: "spring",
-        stiffness: 300,
-        damping: 30,
-        delay: Math.random() * 0.5,
+        opacity: {
+          type: "spring",
+          stiffness: 300,
+          damping: 30,
+          delay: Math.random() * 0.5,
+        },
+        scale: {
+          type: "spring",
+          stiffness: 300,
+          damping: 30,
+          delay: Math.random() * 0.5,
+        },
+        y: {
+          duration: floatingParams.duration,
+          repeat: Infinity,
+          repeatType: "reverse",
+          ease: "easeInOut",
+          delay: floatingParams.delay,
+        },
+        rotate: {
+          duration: floatingParams.rotationDuration,
+          repeat: Infinity,
+          repeatType: "reverse",
+          ease: "easeInOut",
+          delay: floatingParams.delay * 1.5,
+        },
+        filter: { duration: 0.3 },
       }}
     >
       {/* Outer pulse ring for nearby state */}
