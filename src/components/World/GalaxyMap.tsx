@@ -242,8 +242,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     velocityX: 0, // velocidade atual em X
     velocityY: 0, // velocidade atual em Y
     rotation: 0,
-    baseSpeed: 0.05, // velocidade base aumentada
-    maxSpeed: 0.1, // velocidade máxima aumentada
+    baseSpeed: 0.2, // velocidade 4x mais rápida
+    maxSpeed: 0.4, // velocidade máxima 4x mais rápida
     direction: Math.random() * Math.PI * 2, // direção atual em radianos
     targetDirection: Math.random() * Math.PI * 2, // direção alvo
     directionChangeTimer: 0,
@@ -2148,11 +2148,11 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
   useEffect(() => {
     const distance = wanderingShip.distanceToPlayer;
-    const maxDistance = 30; // Distância ainda maior para melhor audibilidade
-    const shouldPlaySound = distance < maxDistance; // Som sempre ativo quando perto
+    const maxDistance = 15; // Distância reduzida para só tocar quando realmente perto
+    const shouldPlaySound = distance < maxDistance; // Som só quando bem perto
 
     console.log(
-      `🔊 Som da nave: distância=${distance.toFixed(2)}, deveria tocar=${shouldPlaySound}, movendo=${wanderingShip.isMoving}, pausado=${wanderingShip.isPaused}`,
+      `🔊 Som da nave: distância=${distance.toFixed(2)}, deveria tocar=${shouldPlaySound}`,
     );
 
     if (shouldPlaySound) {
