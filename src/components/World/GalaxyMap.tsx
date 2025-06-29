@@ -537,7 +537,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     const currentMapX = mapX.get();
     const currentMapY = mapY.get();
 
-    // Tempo atual para animações
+    // Tempo atual para anima��ões
     const currentTime = Date.now() * 0.001; // Converte para segundos
 
     const colors = [
@@ -806,7 +806,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       );
 
       if (distance > 0) {
-        // Normaliza a direção e aplica força de repulsão
+        // Normaliza a direç��o e aplica força de repulsão
         const normalizedX = repelDirectionX / distance;
         const normalizedY = repelDirectionY / distance;
         const repelForce = 15; // Força da repulsão
@@ -893,7 +893,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     [],
   );
 
-  // Função para atualizar dire��ão do auto-piloto baseada na posição do mouse
+  // Função para atualizar direção do auto-piloto baseada na posição do mouse
   const updateAutoPilotDirection = useCallback(
     (mouseX: number, mouseY: number) => {
       const canvas = canvasRef.current;
