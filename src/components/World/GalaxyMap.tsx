@@ -1492,8 +1492,6 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       setShipPosition({ x: newX, y: newY });
     }
 
-    setShipPosition({ x: newX, y: newY });
-
     // Só atualiza mapa visual se movimento é permitido
     if (allowMovement) {
       // Atualiza mapa visual com wrap
@@ -2139,11 +2137,10 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
   useEffect(() => {
     const distance = wanderingShip.distanceToPlayer;
-    const maxDistance = 20; // Distância máxima reduzida para ouvir som
+    const maxDistance = 25; // Distância aumentada para melhor audibilidade
     const shouldPlaySound =
-      wanderingShip.isMoving &&
-      !wanderingShip.isPaused &&
-      distance < maxDistance;
+      distance < maxDistance &&
+      (wanderingShip.isMoving || !wanderingShip.isPaused); // Som mais permissivo
 
     console.log(
       `🔊 Som da nave: distância=${distance.toFixed(2)}, deveria tocar=${shouldPlaySound}`,
@@ -2802,7 +2799,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 {/* Header com gradiente */}
                 <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-3xl p-6 text-center border-b border-gray-100">
                   <motion.img
-                    src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F35b6bdfaaf2f41f2882a22458f10917d?format=webp&width=800"
+                    src="https://cdn.builder.io/api/v1/image/assets%2Fcd7f7270636644acbedf48e0ef62abd0%2F9b01dc80171f480d8fb5a342061dde24?format=webp&width=800"
                     alt="Nave Mercante"
                     className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4"
                     animate={{
