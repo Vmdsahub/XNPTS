@@ -1713,7 +1713,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         </div>
         {/* Novos pontos clicáveis */}
         {points.map((point) => (
-          <div
+          <motion.div
             key={point.id}
             className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${
               isAdmin
@@ -1727,6 +1727,31 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             }}
             onClick={() => handlePointClick(point)}
             onMouseDown={(e) => handlePointMouseDown(e, point)}
+            animate={{
+              y: [0, -8 - (point.id * 2), 0, 6 + (point.id * 1.5), 0],
+              x: [0, 3 + (point.id * 0.8), 0, -4 - (point.id * 0.6), 0],
+              rotate: [0, 1.5 + (point.id * 0.3), 0, -2 - (point.id * 0.2), 0],
+            }}
+            transition={{
+              y: {
+                duration: 5 + (point.id * 0.7),
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: point.id * 0.8,
+              },
+              x: {
+                duration: 6 + (point.id * 0.5),
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: point.id * 1.2,
+              },
+              rotate: {
+                duration: 8 + (point.id * 0.9),
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: point.id * 1.5,
+              },
+            }}
           >
             <div className="relative group">
               {/* Imagem do planeta/estação */}
