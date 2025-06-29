@@ -215,6 +215,12 @@ class BackgroundMusicService {
     if (index < 0 || index >= this.tracks.length) return;
 
     const track = this.tracks[index];
+
+    if (this.isUsingSynthetic) {
+      this.playSyntheticTrack(index);
+      return;
+    }
+
     const audio = new Audio(track.path);
 
     audio.volume = 0;
