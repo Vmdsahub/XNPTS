@@ -246,11 +246,12 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     rotation: 0,
     targetRotation: 0,
     isMoving: false,
-    isPaused: false,
-    pauseTimer: 0,
-    speed: 0.015, // ainda mais lento
+    isPaused: true, // Começa pausado
+    pauseTimer: 60, // Timer inicial
+    speed: 0.008, // Velocidade mais lenta e suave
     progress: 0, // progresso na curva atual (0-1)
-    behavior: "patrolling", // 'patrolling', 'paused', 'investigating'
+    behavior: "paused", // Começa pausado
+    distanceToPlayer: 100, // Distância ao jogador
   });
 
   const mapRef = useRef<HTMLDivElement>(null);
