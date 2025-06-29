@@ -81,6 +81,16 @@ export const useBackgroundMusic = (): UseBackgroundMusicReturn => {
     };
   }, [updateState]);
 
+  // Cleanup quando componente desmonta
+  useEffect(() => {
+    return () => {
+      // Para a música quando o hook é desmontado
+      backgroundMusicService.pause().catch(() => {
+        // Ignora erros durante cleanup
+      });
+    };
+  }, []);
+
   return {
     isPlaying,
     isPaused,
