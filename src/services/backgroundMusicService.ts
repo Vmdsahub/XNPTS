@@ -181,6 +181,17 @@ class BackgroundMusicService {
       this.isPlaying = true;
       console.log("✅ Música iniciada com sucesso");
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      if (errorMessage.includes("user didn't interact")) {
+        console.warn(
+          "⚠️ Música bloqueada: precisa de interação do usuário primeiro",
+        );
+        // Não marca como erro - é comportamento normal do navegador
+        return;
+      }
+
       console.error("❌ Erro ao iniciar música de fundo:", error);
       throw error;
     }
