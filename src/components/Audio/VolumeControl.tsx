@@ -14,6 +14,12 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
 
   // Mostra botão de play se música não estiver tocando
   useEffect(() => {
+    console.log(
+      "🎛️ VolumeControl: Estado atual - isPlaying:",
+      isPlaying,
+      "volume:",
+      volume,
+    );
     if (!isPlaying && volume > 0) {
       setShowPlayButton(true);
     } else {
