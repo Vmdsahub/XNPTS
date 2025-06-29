@@ -1728,28 +1728,28 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             onClick={() => handlePointClick(point)}
             onMouseDown={(e) => handlePointMouseDown(e, point)}
             animate={{
-              y: [0, -3 - point.id * 0.5, 0, 2 + point.id * 0.3, 0],
-              x: [0, 1 + point.id * 0.2, 0, -1.5 - point.id * 0.1, 0],
-              rotate: [0, 0.5 + point.id * 0.1, 0, -0.8 - point.id * 0.05, 0],
+              y: [0, -5 - point.id * 0.8, 0, 3.5 + point.id * 0.5, 0],
+              x: [0, 2 + point.id * 0.4, 0, -2.5 - point.id * 0.3, 0],
+              rotate: [0, 1 + point.id * 0.15, 0, -1.3 - point.id * 0.1, 0],
             }}
             transition={{
               y: {
-                duration: 8 + point.id * 1.2,
+                duration: 6 + point.id * 0.8,
                 repeat: Infinity,
                 ease: "easeInOut",
-                delay: point.id * 1.5,
+                delay: point.id * 1,
               },
               x: {
-                duration: 10 + point.id * 1.8,
+                duration: 7 + point.id * 1,
                 repeat: Infinity,
                 ease: "easeInOut",
-                delay: point.id * 2,
+                delay: point.id * 1.3,
               },
               rotate: {
-                duration: 12 + point.id * 2,
+                duration: 9 + point.id * 1.5,
                 repeat: Infinity,
                 ease: "easeInOut",
-                delay: point.id * 2.5,
+                delay: point.id * 1.8,
               },
             }}
           >
