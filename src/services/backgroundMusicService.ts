@@ -54,8 +54,8 @@ class BackgroundMusicService {
 
   constructor() {
     console.log("🎵 Inicializando BackgroundMusicService...");
-    // Usar música sintética diretamente
-    this.setupSyntheticMusic();
+    this.originalTracks = [...this.tracks];
+    this.checkForRealMusic();
   }
 
   /**
