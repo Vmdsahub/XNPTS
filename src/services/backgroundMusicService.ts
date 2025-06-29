@@ -595,85 +595,25 @@ class BackgroundMusicService {
       "para",
       newVolume,
     );
-    const oldVolume = this.volume;
     this.volume = Math.max(0, Math.min(1, newVolume));
 
-    if (this.isUsingSynthetic) {
-      // Para música sintética, ajusta volume dos gain nodes em tempo real
-      this.updateSyntheticVolume();
-
-      // Se estava no zero e agora tem volume, retoma música
-      if (oldVolume === 0 && this.volume > 0 && this.isPaused) {
-        this.resumeSyntheticMusic();
-      }
-      // Se agora é zero, pausa música
-      else if (this.volume === 0 && this.isPlaying) {
-        this.pauseSyntheticMusic();
+    if (this.isUsingSynthetic && this.masterGainNode) {
+      // Para música sintética, ajusta volume do master gain
+      try {
+        const ctx = this.syntheticAudioContext;
+        if (ctx) {
+          this.masterGainNode.gain.linearRampToValueAtTime(
+            this.volume * 0.3, // Volume base reduzido
+            ctx.currentTime + 0.1,
+          );
+          console.log("✅ Volume sintético ajustado para:", this.volume);
+        }
+      } catch (error) {
+        console.warn("❌ Erro ao ajustar volume sintético:", error);
       }
     } else if (this.currentTrack) {
       this.currentTrack.volume = this.volume;
     }
-  }
-
-  /**
-   * Atualiza volume da música sintética em tempo real
-   */
-  private updateSyntheticVolume(): void {
-    if (this.currentGainNodes.length > 0) {
-      console.log(
-        "🔊 Atualizando volume de",
-        this.currentGainNodes.length,
-        "gain nodes para:",
-        this.volume,
-      );
-      this.currentGainNodes.forEach((gainNode) => {
-        try {
-          // Ajusta volume gradualmente para evitar cliques
-          gainNode.gain.linearRampToValueAtTime(
-            gainNode.gain.value *
-              (this.volume / (this.volume === 0 ? 0.01 : 1)),
-            (this.syntheticAudioContext?.currentTime || 0) + 0.1,
-          );
-        } catch (e) {
-          console.warn("Erro ao ajustar gain node:", e);
-        }
-      });
-    }
-  }
-
-  /**
-   * Pausa música sintética sem parar osciladores
-   */
-  private pauseSyntheticMusic(): void {
-    this.isPaused = true;
-    this.currentGainNodes.forEach((gainNode) => {
-      try {
-        gainNode.gain.linearRampToValueAtTime(
-          0,
-          (this.syntheticAudioContext?.currentTime || 0) + 0.1,
-        );
-      } catch (e) {
-        // Ignora
-      }
-    });
-  }
-
-  /**
-   * Retoma música sintética
-   */
-  private resumeSyntheticMusic(): void {
-    this.isPaused = false;
-    this.currentGainNodes.forEach((gainNode) => {
-      try {
-        const targetVolume = gainNode.gain.value * this.volume;
-        gainNode.gain.linearRampToValueAtTime(
-          targetVolume,
-          (this.syntheticAudioContext?.currentTime || 0) + 0.1,
-        );
-      } catch (e) {
-        // Ignora
-      }
-    });
   }
 
   /**
