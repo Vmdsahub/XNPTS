@@ -2512,20 +2512,24 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               className="relative w-10 h-10"
               style={{ rotate: wanderingShip.rotation }}
               animate={{
-                scale: 1.02, // Escala constante e sutil
-                // Flutuação suave e constante
-                y: [0, -1, 0, 1, 0],
-                x: [0, 0.5, 0, -0.5, 0],
+                scale: wanderingShip.isPaused ? 0.95 : 1.02,
+                // Movimento diferente quando pausado
+                y: wanderingShip.isPaused
+                  ? [0, -0.5, 0, 0.5, 0]
+                  : [0, -1, 0, 1, 0],
+                x: wanderingShip.isPaused
+                  ? [0, 0.2, 0, -0.2, 0]
+                  : [0, 0.5, 0, -0.5, 0],
               }}
               transition={{
-                scale: { duration: 0.3 },
+                scale: { duration: 0.5 },
                 y: {
-                  duration: 3,
+                  duration: wanderingShip.isPaused ? 1.5 : 3,
                   repeat: Infinity,
                   ease: "easeInOut",
                 },
                 x: {
-                  duration: 2.5,
+                  duration: wanderingShip.isPaused ? 1.2 : 2.5,
                   repeat: Infinity,
                   ease: "easeInOut",
                 },
