@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { useBackgroundMusic } from "../../hooks/useBackgroundMusic";
 
@@ -9,7 +9,17 @@ interface VolumeControlProps {
 export const VolumeControl: React.FC<VolumeControlProps> = ({
   className = "",
 }) => {
-  const { volume, setVolume } = useBackgroundMusic();
+  const { volume, setVolume, isPlaying, play } = useBackgroundMusic();
+
+  // Tenta iniciar música se não estiver tocando
+  useEffect(() => {
+    if (!isPlaying && volume > 0) {
+      console.log("🔊 VolumeControl: Tentando iniciar música...");
+      play().catch((error) => {
+        console.warn("❌ VolumeControl: Erro ao iniciar música:", error);
+      });
+    }
+  }, [isPlaying, volume, play]);
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
