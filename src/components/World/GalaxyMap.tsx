@@ -726,7 +726,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               const opacityHash = hash(worldX * 1.7, worldY * 1.9, layer);
               const colorHash = hash(worldX * 2.1, worldY * 2.3, layer);
 
-              // Hash para animações únicas de cada estrela
+              // Hash para animações ��nicas de cada estrela
               const animationSeed = hash(worldX * 3.7, worldY * 4.1, layer);
               const animationSeed2 = hash(worldX * 5.3, worldY * 6.7, layer);
 
@@ -2899,6 +2899,11 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
           </>
         )}
       </AnimatePresence>
+
+      {/* Music Controls */}
+      <div className="absolute top-4 right-4 z-40">
+        <MusicControls size="sm" showTrackInfo={false} />
+      </div>
 
       {/* Coordenadas simplificadas na parte inferior */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/20 text-xs font-mono font-thin whitespace-nowrap">
