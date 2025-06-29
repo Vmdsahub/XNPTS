@@ -152,11 +152,14 @@ export const MusicControls: React.FC<MusicControlsProps> = ({
             type="range"
             min="0"
             max="1"
-            step="0.1"
+            step="0.05"
             value={volume}
             onChange={handleVolumeChange}
             className="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
             title="Volume"
+            style={{
+              background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${volume * 100}%, rgba(255, 255, 255, 0.2) ${volume * 100}%, rgba(255, 255, 255, 0.2) 100%)`,
+            }}
           />
         </div>
       </div>
