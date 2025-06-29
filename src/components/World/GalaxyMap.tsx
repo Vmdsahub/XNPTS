@@ -2088,7 +2088,12 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
           nextDirectionChange: newNextDirectionChange,
           rotation: newRotation,
           isMoving: true,
+          isPaused: false,
+          pauseTimer: 0,
+          hasRecentlyPaused,
+          pauseCooldown,
           distanceToPlayer,
+          nearestWorldDistance,
         };
       });
 
