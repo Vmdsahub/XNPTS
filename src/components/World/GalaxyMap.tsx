@@ -809,7 +809,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         // Normaliza a direç��o e aplica força de repulsão
         const normalizedX = repelDirectionX / distance;
         const normalizedY = repelDirectionY / distance;
-        const repelForce = 15; // Força da repulsão
+        const repelForce = 15; // For��a da repulsão
 
         // Para o movimento atual imediatamente
         setVelocity({ x: 0, y: 0 });
@@ -1451,6 +1451,27 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     );
   };
 
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    setIsHolding(false);
+    setHoldProgress(0);
+    setHoldStartTime(null);
+
+    // Se não moveu (apenas toque), para completamente
+    if (!hasMoved) {
+      setVelocity({ x: 0, y: 0 });
+      setIsDecelerating(false);
+    }
+
+    localStorage.setItem(
+      "xenopets-player-data",
+      JSON.stringify({
+        ship: shipPosRef.current,
+        map: { x: mapX.get(), y: mapY.get() },
+      }),
+    );
+  };
+
   // Mouse events globais para capturar movimento fora do elemento
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
@@ -1772,7 +1793,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         </motion.div>
       )}
 
-      {/* Notificação de Colis���o - Centralizada no topo do mapa */}
+      {/* Notificação de Colis��o - Centralizada no topo do mapa */}
       {collisionNotification.show && (
         <div className="absolute top-4 left-0 right-0 z-50 flex justify-center">
           <motion.div
