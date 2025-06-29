@@ -2487,123 +2487,134 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             </motion.div>
           </motion.div>
         </div>
-        {/* Novos pontos clicáveis */}
-        {points.map((point) => (
-          <motion.div
-            key={point.id}
-            className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${
-              isAdmin
-                ? "cursor-grab hover:cursor-grab active:cursor-grabbing"
-                : "cursor-pointer"
-            } ${draggingPoint === point.id ? "z-50" : "z-30"}`}
-            style={{
-              left: `${point.x}%`,
-              top: `${point.y}%`,
-              pointerEvents: "auto",
-            }}
-            onClick={() => handlePointClick(point)}
-            onMouseDown={(e) => handlePointMouseDown(e, point)}
-            onTouchStart={(e) => handlePointTouchStart(e, point)}
-            animate={{
-              y: [0, -5 - point.id * 0.8, 0, 3.5 + point.id * 0.5, 0],
-              x: [0, 2 + point.id * 0.4, 0, -2.5 - point.id * 0.3, 0],
-              rotate: [0, 1 + point.id * 0.15, 0, -1.3 - point.id * 0.1, 0],
-            }}
-            transition={{
-              y: {
-                duration: 6 + point.id * 0.8,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: point.id * 1,
-              },
-              x: {
-                duration: 7 + point.id * 1,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: point.id * 1.3,
-              },
-              rotate: {
-                duration: 9 + point.id * 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: point.id * 1.8,
-              },
-            }}
-          >
-            <div className="relative group">
-              {/* Imagem do planeta/estação */}
-              <div
-                className={`w-48 h-48 transition-all duration-300 relative ${
-                  draggingPoint === point.id
-                    ? "scale-110 brightness-110"
-                    : resizingPoint === point.id
-                      ? "brightness-125"
-                      : "hover:scale-105 hover:brightness-110"
-                }`}
-                style={{
-                  transform: `scale(${point.scale || 1})`,
-                  filter:
-                    draggingPoint === point.id
-                      ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
-                      : resizingPoint === point.id
-                        ? "drop-shadow(0 0 25px rgba(0, 255, 255, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
-                        : "drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1))",
-                }}
-              >
-                <img
-                  src={point.image}
-                  alt={point.label}
-                  className="w-full h-full object-contain"
-                  crossOrigin="anonymous"
-                  loading="eager"
-                  onLoad={(e) => {
-                    console.log(`✅ Imagem carregada: ${point.label}`);
-                  }}
-                  onError={(e) => {
-                    console.error(
-                      `❌ Erro ao carregar imagem: ${point.label}`,
-                      point.image,
-                    );
-                  }}
-                />
-
-                {/* Brilho de seleção para admin */}
-                {draggingPoint === point.id && (
-                  <div className="absolute inset-0 rounded-lg bg-yellow-400/30 animate-pulse"></div>
-                )}
-              </div>
-
-              {/* Admin indicator */}
-              {isAdmin && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-white opacity-80 shadow-lg">
-                  <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
-                </div>
-              )}
-
-              {/* Tooltip melhorado */}
-              <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 bg-gradient-to-br from-gray-900 to-black text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-gray-600 shadow-xl">
-                <div className="font-bold text-cyan-300">{point.label}</div>
-                <div className="text-gray-300 text-xs capitalize">
-                  {point.type}
-                </div>
-                {point.scale && point.scale !== 1 && (
-                  <div className="text-blue-300 text-xs">
-                    Escala: {point.scale.toFixed(1)}x
-                  </div>
-                )}
-                {isAdmin && (
-                  <div className="text-yellow-400 text-xs mt-1">
-                    <div>⚡ Arraste para mover</div>
-                    <div>🔧 Ctrl+Arraste para redimensionar</div>
-                  </div>
-                )}
-
-                {/* Tooltip arrow */}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-              </div>
+        {/* Loading indicator for worlds */}
+        {isLoadingWorlds && (
+          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-2"></div>
+              <p className="text-gray-300 text-sm">Carregando mundos...</p>
             </div>
-          </motion.div>
-        ))}
+          </div>
+        )}
+
+        {/* Novos pontos clicáveis */}
+        {!isLoadingWorlds &&
+          points.map((point) => (
+            <motion.div
+              key={point.id}
+              className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${
+                isAdmin
+                  ? "cursor-grab hover:cursor-grab active:cursor-grabbing"
+                  : "cursor-pointer"
+              } ${draggingPoint === point.id ? "z-50" : "z-30"}`}
+              style={{
+                left: `${point.x}%`,
+                top: `${point.y}%`,
+                pointerEvents: "auto",
+              }}
+              onClick={() => handlePointClick(point)}
+              onMouseDown={(e) => handlePointMouseDown(e, point)}
+              onTouchStart={(e) => handlePointTouchStart(e, point)}
+              animate={{
+                y: [0, -5 - point.id * 0.8, 0, 3.5 + point.id * 0.5, 0],
+                x: [0, 2 + point.id * 0.4, 0, -2.5 - point.id * 0.3, 0],
+                rotate: [0, 1 + point.id * 0.15, 0, -1.3 - point.id * 0.1, 0],
+              }}
+              transition={{
+                y: {
+                  duration: 6 + point.id * 0.8,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: point.id * 1,
+                },
+                x: {
+                  duration: 7 + point.id * 1,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: point.id * 1.3,
+                },
+                rotate: {
+                  duration: 9 + point.id * 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: point.id * 1.8,
+                },
+              }}
+            >
+              <div className="relative group">
+                {/* Imagem do planeta/estação */}
+                <div
+                  className={`w-48 h-48 transition-all duration-300 relative ${
+                    draggingPoint === point.id
+                      ? "scale-110 brightness-110"
+                      : resizingPoint === point.id
+                        ? "brightness-125"
+                        : "hover:scale-105 hover:brightness-110"
+                  }`}
+                  style={{
+                    transform: `scale(${point.scale || 1})`,
+                    filter:
+                      draggingPoint === point.id
+                        ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
+                        : resizingPoint === point.id
+                          ? "drop-shadow(0 0 25px rgba(0, 255, 255, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
+                          : "drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1))",
+                  }}
+                >
+                  <img
+                    src={point.image}
+                    alt={point.label}
+                    className="w-full h-full object-contain"
+                    crossOrigin="anonymous"
+                    loading="eager"
+                    onLoad={(e) => {
+                      console.log(`✅ Imagem carregada: ${point.label}`);
+                    }}
+                    onError={(e) => {
+                      console.error(
+                        `❌ Erro ao carregar imagem: ${point.label}`,
+                        point.image,
+                      );
+                    }}
+                  />
+
+                  {/* Brilho de seleção para admin */}
+                  {draggingPoint === point.id && (
+                    <div className="absolute inset-0 rounded-lg bg-yellow-400/30 animate-pulse"></div>
+                  )}
+                </div>
+
+                {/* Admin indicator */}
+                {isAdmin && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-white opacity-80 shadow-lg">
+                    <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
+                  </div>
+                )}
+
+                {/* Tooltip melhorado */}
+                <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 bg-gradient-to-br from-gray-900 to-black text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-gray-600 shadow-xl">
+                  <div className="font-bold text-cyan-300">{point.label}</div>
+                  <div className="text-gray-300 text-xs capitalize">
+                    {point.type}
+                  </div>
+                  {point.scale && point.scale !== 1 && (
+                    <div className="text-blue-300 text-xs">
+                      Escala: {point.scale.toFixed(1)}x
+                    </div>
+                  )}
+                  {isAdmin && (
+                    <div className="text-yellow-400 text-xs mt-1">
+                      <div>⚡ Arraste para mover</div>
+                      <div>🔧 Ctrl+Arraste para redimensionar</div>
+                    </div>
+                  )}
+
+                  {/* Tooltip arrow */}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
       </motion.div>
 
       {/* Nave do jogador - fixa no centro */}
