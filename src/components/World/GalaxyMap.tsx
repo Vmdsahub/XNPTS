@@ -25,7 +25,7 @@ interface GalaxyMapProps {}
 
 // Sistema simples de pontos
 interface Point {
-  id: number;
+  id: string | number;
   x: number;
   y: number;
   label: string;
@@ -33,6 +33,17 @@ interface Point {
   type: string;
   scale?: number;
 }
+
+// Converter GalaxyWorld para Point
+const galaxyWorldToPoint = (world: GalaxyWorld): Point => ({
+  id: world.id,
+  x: world.x,
+  y: world.y,
+  label: world.name,
+  image: world.imageUrl,
+  type: "world",
+  scale: world.scale,
+});
 
 // 7 pontos distribuídos em círculo ao redor do centro
 const createDefaultPoints = (): Point[] => {
