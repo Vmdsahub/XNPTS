@@ -1,8 +1,5 @@
 /**
  * BackgroundMusicService - Gerenciador de música de fundo para navegação galáctica
- *
- * Este serviço gerencia uma playlist de músicas de fundo com fade in/out,
- * pausas e transições suaves para criar uma experiência imersiva na navegação galáctica.
  */
 
 export interface MusicTrack {
@@ -41,17 +38,13 @@ class BackgroundMusicService {
     },
   ];
 
-  private originalTracksCount: number;
-
   private currentTrack: HTMLAudioElement | null = null;
   private currentTrackIndex: number = 0;
   private isPlaying: boolean = false;
   private isPaused: boolean = false;
   private volume: number = 0.3;
-  private fadeInterval: NodeJS.Timeout | null = null;
-  private fadeSteps: number = 20;
-  private fadeDuration: number = 2000; // 2 segundos
-  private crossfadeNextTrack: HTMLAudioElement | null = null;
+
+  // Synthetic music properties
   private syntheticAudioContext: AudioContext | null = null;
   private currentOscillators: OscillatorNode[] = [];
   private masterGainNode: GainNode | null = null;
@@ -59,7 +52,6 @@ class BackgroundMusicService {
 
   constructor() {
     console.log("🎵 Inicializando BackgroundMusicService...");
-    this.originalTracksCount = this.tracks.length;
     this.preloadTracks();
   }
 
@@ -87,27 +79,6 @@ class BackgroundMusicService {
     } catch (error) {
       console.warn("Erro ao carregar faixas, usando música sintética:", error);
       this.setupSyntheticMusic();
-    }
-  }
-
-  /**
-   * Configura música sintética como fallback
-   */
-  private setupSyntheticMusic(): void {
-    this.isUsingSynthetic = true;
-    this.tracks = [
-      { id: "synthetic-1", name: "Nebula Drift", path: "synthetic" },
-      { id: "synthetic-2", name: "Cosmic Winds", path: "synthetic" },
-      { id: "synthetic-3", name: "Deep Void", path: "synthetic" },
-    ];
-
-    try {
-      this.syntheticAudioContext = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
-      console.log("✅ Sistema de música sintética ativado");
-    } catch (error) {
-      console.warn("❌ Web Audio API não suportada:", error);
-      this.isUsingSynthetic = false;
     }
   }
 
@@ -152,6 +123,27 @@ class BackgroundMusicService {
   }
 
   /**
+   * Configura música sintética como fallback
+   */
+  private setupSyntheticMusic(): void {
+    this.isUsingSynthetic = true;
+    this.tracks = [
+      { id: "synthetic-1", name: "Ambient Space", path: "synthetic" },
+      { id: "synthetic-2", name: "Cosmic Winds", path: "synthetic" },
+      { id: "synthetic-3", name: "Deep Void", path: "synthetic" },
+    ];
+
+    try {
+      this.syntheticAudioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+      console.log("✅ Sistema de música sintética ativado");
+    } catch (error) {
+      console.warn("❌ Web Audio API não suportada:", error);
+      this.isUsingSynthetic = false;
+    }
+  }
+
+  /**
    * Inicia a reprodução da trilha sonora
    */
   async play(): Promise<void> {
@@ -172,7 +164,6 @@ class BackgroundMusicService {
         console.log("▶️ Retomando da pausa...");
         this.isPaused = false;
         await this.currentTrack.play();
-        this.fadeIn(this.currentTrack);
       } else {
         // Inicia nova faixa
         console.log("🎼 Iniciando nova faixa...");
@@ -189,7 +180,6 @@ class BackgroundMusicService {
         console.warn(
           "⚠️ Música bloqueada: precisa de interação do usuário primeiro",
         );
-        // Não marca como erro - é comportamento normal do navegador
         return;
       }
 
@@ -199,17 +189,24 @@ class BackgroundMusicService {
   }
 
   /**
-   * Pausa a reprodução com fade out
+   * Pausa a reprodução
    */
   async pause(): Promise<void> {
     if (!this.isPlaying || this.isPaused) return;
 
     this.isPaused = true;
 
-    if (this.isUsingSynthetic) {
-      this.stopSyntheticTrack();
+    if (this.isUsingSynthetic && this.masterGainNode) {
+      // Para música sintética, diminui volume
+      try {
+        this.masterGainNode.gain.linearRampToValueAtTime(
+          0,
+          (this.syntheticAudioContext?.currentTime || 0) + 0.1,
+        );
+      } catch (e) {
+        // Ignora
+      }
     } else if (this.currentTrack) {
-      await this.fadeOut(this.currentTrack);
       this.currentTrack.pause();
     }
   }
@@ -225,19 +222,11 @@ class BackgroundMusicService {
       this.stopSyntheticTrack();
     } else {
       if (this.currentTrack) {
-        await this.fadeOut(this.currentTrack);
         this.currentTrack.pause();
         this.currentTrack.currentTime = 0;
         this.currentTrack = null;
       }
-
-      if (this.crossfadeNextTrack) {
-        this.crossfadeNextTrack.pause();
-        this.crossfadeNextTrack = null;
-      }
     }
-
-    this.clearFadeInterval();
   }
 
   /**
@@ -254,8 +243,7 @@ class BackgroundMusicService {
     }
 
     const audio = new Audio(track.path);
-
-    audio.volume = 0;
+    audio.volume = this.volume;
     audio.loop = false;
 
     // Configura evento para próxima faixa
@@ -265,21 +253,11 @@ class BackgroundMusicService {
 
     try {
       await audio.play();
-
-      // Se há uma faixa atual, faz crossfade
-      if (this.currentTrack && this.isPlaying) {
-        await this.crossfade(this.currentTrack, audio);
-      } else {
-        this.fadeIn(audio);
-      }
-
       this.currentTrack = audio;
       this.currentTrackIndex = index;
-
       console.log(`Reproduzindo: ${track.name}`);
     } catch (error) {
       console.error(`Erro ao reproduzir ${track.name}:`, error);
-      // Tenta próxima faixa em caso de erro
       this.nextTrack();
     }
   }
@@ -293,199 +271,23 @@ class BackgroundMusicService {
     // Para osciladores anteriores
     this.stopSyntheticTrack();
 
-    const track = this.tracks[index];
-    const ctx = this.syntheticAudioContext;
-
-    // Configurações musicais espaciais mais complexas
-    const spaceConfigs = [
-      {
-        name: "Nebula Drift",
-        baseFreq: 220, // A3
-        melody: [220, 246.94, 261.63, 293.66, 329.63], // A3, B3, C4, D4, E4
-        chords: [
-          [220, 261.63, 329.63],
-          [246.94, 293.66, 369.99],
-        ], // Am, Bdim
-        rhythm: [2, 1, 2, 1, 4],
-        filterFreq: 1000,
-      },
-      {
-        name: "Cosmic Winds",
-        baseFreq: 174.61, // F3
-        melody: [174.61, 196, 220, 246.94, 261.63], // F3, G3, A3, B3, C4
-        chords: [
-          [174.61, 220, 261.63],
-          [196, 246.94, 293.66],
-        ], // Fm, Gm
-        rhythm: [3, 1, 2, 2, 2],
-        filterFreq: 800,
-      },
-      {
-        name: "Deep Void",
-        baseFreq: 146.83, // D3
-        melody: [146.83, 164.81, 185, 207.65, 233.08], // D3, E3, F#3, G#3, A#3
-        chords: [
-          [146.83, 185, 233.08],
-          [164.81, 207.65, 246.94],
-        ], // Dm, Em
-        rhythm: [4, 2, 1, 3, 2],
-        filterFreq: 600,
-      },
-    ];
-
-    const config = spaceConfigs[index % spaceConfigs.length];
-
-    this.createSpaceAmbient(ctx, config);
-    this.createMelodyLine(ctx, config);
-    this.createChordPad(ctx, config);
-
-    this.currentTrackIndex = index;
-    console.log(`🎵 Reproduzindo: ${config.name}`);
-
-    // Auto próxima faixa após 180 segundos (3 minutos)
-    setTimeout(() => {
-      if (this.isPlaying && this.isUsingSynthetic) {
-        this.nextTrack();
-      }
-    }, 180000);
-  }
-
-  private createSpaceAmbient(ctx: AudioContext, config: any): void {
-    // Cria ambiente espacial com ruído filtrado
-    const bufferSize = ctx.sampleRate * 180; // 180 segundos (3 minutos)
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-
-    // Gera ruído rosa filtrado
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() - 0.5) * 0.1;
-    }
-
-    const noise = ctx.createBufferSource();
-    const filter = ctx.createBiquadFilter();
-    const gain = ctx.createGain();
-
-    noise.buffer = buffer;
-    noise.loop = true;
-
-    filter.type = "lowpass";
-    filter.frequency.setValueAtTime(config.filterFreq, ctx.currentTime);
-    filter.Q.setValueAtTime(0.5, ctx.currentTime);
-
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(this.volume * 0.15, ctx.currentTime + 3);
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-
-    noise.start();
-    this.currentOscillators.push(noise as any);
-    this.currentGainNodes.push(gain);
-  }
-
-  private createMelodyLine(ctx: AudioContext, config: any): void {
-    // Toca melodia repetidas vezes durante a faixa
-    for (let cycle = 0; cycle < 8; cycle++) {
-      let time = ctx.currentTime + 2 + cycle * 20; // Novo ciclo a cada 20 segundos
-
-      config.melody.forEach((freq: number, i: number) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const filter = ctx.createBiquadFilter();
-
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(freq, time);
-
-        filter.type = "lowpass";
-        filter.frequency.setValueAtTime(freq * 4, time);
-        filter.Q.setValueAtTime(1, time);
-
-        const noteLength = config.rhythm[i % config.rhythm.length];
-        const volume = this.volume * 0.08;
-
-        gain.gain.setValueAtTime(0, time);
-        gain.gain.linearRampToValueAtTime(volume, time + 0.1);
-        gain.gain.exponentialRampToValueAtTime(0.001, time + noteLength);
-
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(time);
-        osc.stop(time + noteLength);
-
-        this.currentGainNodes.push(gain);
-
-        time += noteLength + 0.5; // Pausa entre notas
-      });
-    }
-  }
-
-  private createChordPad(ctx: AudioContext, config: any): void {
-    // Cria acordes que duram toda a faixa (180 segundos)
-    config.chords.forEach((chord: number[], chordIndex: number) => {
-      const startTime = ctx.currentTime + 4 + chordIndex * 90; // Alterna a cada 90 segundos
-
-      chord.forEach((freq: number) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const filter = ctx.createBiquadFilter();
-
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(freq * 0.5, startTime); // Oitava abaixo
-
-        filter.type = "lowpass";
-        filter.frequency.setValueAtTime(freq * 2, startTime);
-        filter.Q.setValueAtTime(0.3, startTime);
-
-        const volume = this.volume * 0.04;
-
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(volume, startTime + 5);
-        gain.gain.setValueAtTime(volume, startTime + 85);
-        gain.gain.linearRampToValueAtTime(0, startTime + 90);
-
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(startTime);
-        osc.stop(startTime + 90);
-
-        this.currentOscillators.push(osc);
-        this.currentGainNodes.push(gain);
-      });
-    });
-  }
-
-  /**
-   * Reproduz uma faixa sintética usando Web Audio API
-   */
-  private playSyntheticTrack(index: number): void {
-    if (!this.syntheticAudioContext) return;
-
-    // Para osciladores anteriores
-    this.stopSyntheticTrack();
-
-    const track = this.tracks[index];
     const ctx = this.syntheticAudioContext;
 
     // Cria master gain node para controle de volume
     this.masterGainNode = ctx.createGain();
-    this.masterGainNode.gain.setValueAtTime(this.volume * 0.3, ctx.currentTime);
+    this.masterGainNode.gain.setValueAtTime(this.volume * 0.2, ctx.currentTime);
     this.masterGainNode.connect(ctx.destination);
 
-    // Frequências base para cada faixa
-    const frequencies = [
-      [220, 261.63, 329.63], // Am chord
-      [174.61, 220, 261.63], // Fm chord
-      [146.83, 185, 233.08], // Dm chord
+    // Frequências base para cada faixa (acordes diferentes)
+    const chordConfigs = [
+      [220, 261.63, 329.63], // Am chord - Lá menor
+      [174.61, 220, 261.63], // Fm chord - Fá menor
+      [146.83, 185, 233.08], // Dm chord - Ré menor
     ];
 
-    const chordFreqs = frequencies[index % frequencies.length];
+    const chordFreqs = chordConfigs[index % chordConfigs.length];
 
-    // Cria osciladores simples mas efetivos
+    // Cria osciladores para o acorde
     chordFreqs.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -494,15 +296,46 @@ class BackgroundMusicService {
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
       // Volume diminui com harmônicos
-      const volume = 0.15 / (i + 1);
+      const volume = 0.3 / (i + 1);
       gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 2);
+      gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 3);
 
       osc.connect(gain);
       gain.connect(this.masterGainNode);
 
       osc.start();
       this.currentOscillators.push(osc);
+    });
+
+    // Adiciona uma melodia simples
+    const melodyFreqs = [
+      [330, 369.99, 415.3], // Melodia em Mi maior
+      [261.63, 293.66, 329.63], // Melodia em Dó maior
+      [220, 246.94, 277.18], // Melodia em Lá maior
+    ];
+
+    const melody = melodyFreqs[index % melodyFreqs.length];
+
+    melody.forEach((freq, i) => {
+      setTimeout(() => {
+        if (this.isPlaying && this.isUsingSynthetic && this.masterGainNode) {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(freq * 2, ctx.currentTime); // Oitava acima
+
+          gain.gain.setValueAtTime(0, ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.5);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2);
+
+          osc.connect(gain);
+          gain.connect(this.masterGainNode);
+
+          osc.start();
+          osc.stop(ctx.currentTime + 2);
+        }
+      }, i * 8000); // Nota a cada 8 segundos
     });
 
     this.currentTrackIndex = index;
@@ -517,69 +350,41 @@ class BackgroundMusicService {
   }
 
   /**
-   * Fade out gradual
+   * Para faixas sintéticas
    */
-  private fadeOut(audio: HTMLAudioElement): Promise<void> {
-    return new Promise((resolve) => {
-      this.clearFadeInterval();
-
-      let currentStep = this.fadeSteps;
-      const stepVolume = audio.volume / this.fadeSteps;
-      const stepTime = this.fadeDuration / this.fadeSteps;
-
-      this.fadeInterval = setInterval(() => {
-        currentStep--;
-        audio.volume = Math.max(stepVolume * currentStep, 0);
-
-        if (currentStep <= 0) {
-          this.clearFadeInterval();
-          resolve();
-        }
-      }, stepTime);
-    });
-  }
-
-  /**
-   * Crossfade entre duas faixas
-   */
-  private async crossfade(
-    currentAudio: HTMLAudioElement,
-    nextAudio: HTMLAudioElement,
-  ): Promise<void> {
-    this.clearFadeInterval();
-
-    let currentStep = 0;
-    const stepTime = this.fadeDuration / this.fadeSteps;
-    const currentStartVolume = currentAudio.volume;
-    const nextTargetVolume = this.volume;
-
-    nextAudio.volume = 0;
-
-    this.fadeInterval = setInterval(() => {
-      currentStep++;
-      const progress = currentStep / this.fadeSteps;
-
-      // Fade out da faixa atual
-      currentAudio.volume = currentStartVolume * (1 - progress);
-
-      // Fade in da próxima faixa
-      nextAudio.volume = nextTargetVolume * progress;
-
-      if (currentStep >= this.fadeSteps) {
-        currentAudio.pause();
-        this.clearFadeInterval();
+  private stopSyntheticTrack(): void {
+    this.currentOscillators.forEach((osc) => {
+      try {
+        osc.stop();
+      } catch (e) {
+        // Ignora erros se já parou
       }
-    }, stepTime);
+    });
+    this.currentOscillators = [];
+    this.masterGainNode = null;
   }
 
   /**
-   * Limpa intervalos de fade
+   * Próxima faixa da playlist
    */
-  private clearFadeInterval(): void {
-    if (this.fadeInterval) {
-      clearInterval(this.fadeInterval);
-      this.fadeInterval = null;
-    }
+  async nextTrack(): Promise<void> {
+    if (!this.isPlaying) return;
+
+    const nextIndex = (this.currentTrackIndex + 1) % this.tracks.length;
+    await this.playTrack(nextIndex);
+  }
+
+  /**
+   * Faixa anterior da playlist
+   */
+  async previousTrack(): Promise<void> {
+    if (!this.isPlaying) return;
+
+    const prevIndex =
+      this.currentTrackIndex === 0
+        ? this.tracks.length - 1
+        : this.currentTrackIndex - 1;
+    await this.playTrack(prevIndex);
   }
 
   /**
@@ -600,7 +405,7 @@ class BackgroundMusicService {
         const ctx = this.syntheticAudioContext;
         if (ctx) {
           this.masterGainNode.gain.linearRampToValueAtTime(
-            this.volume * 0.3, // Volume base reduzido
+            this.volume * 0.2, // Volume base reduzido
             ctx.currentTime + 0.1,
           );
           console.log("✅ Volume sintético ajustado para:", this.volume);
