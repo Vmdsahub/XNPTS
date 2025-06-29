@@ -1728,25 +1728,25 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             onClick={() => handlePointClick(point)}
             onMouseDown={(e) => handlePointMouseDown(e, point)}
             animate={{
-              y: [0, -8 - (point.id * 2), 0, 6 + (point.id * 1.5), 0],
-              x: [0, 3 + (point.id * 0.8), 0, -4 - (point.id * 0.6), 0],
-              rotate: [0, 1.5 + (point.id * 0.3), 0, -2 - (point.id * 0.2), 0],
+              y: [0, -8 - point.id * 2, 0, 6 + point.id * 1.5, 0],
+              x: [0, 3 + point.id * 0.8, 0, -4 - point.id * 0.6, 0],
+              rotate: [0, 1.5 + point.id * 0.3, 0, -2 - point.id * 0.2, 0],
             }}
             transition={{
               y: {
-                duration: 5 + (point.id * 0.7),
+                duration: 5 + point.id * 0.7,
                 repeat: Infinity,
                 ease: "easeInOut",
                 delay: point.id * 0.8,
               },
               x: {
-                duration: 6 + (point.id * 0.5),
+                duration: 6 + point.id * 0.5,
                 repeat: Infinity,
                 ease: "easeInOut",
                 delay: point.id * 1.2,
               },
               rotate: {
-                duration: 8 + (point.id * 0.9),
+                duration: 8 + point.id * 0.9,
                 repeat: Infinity,
                 ease: "easeInOut",
                 delay: point.id * 1.5,
@@ -1814,7 +1814,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </motion.div>
 
