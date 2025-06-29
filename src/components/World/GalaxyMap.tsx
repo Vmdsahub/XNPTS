@@ -2223,6 +2223,15 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     merchantEngineSound,
   ]);
 
+  // Cleanup do som da nave mercante quando componente desmonta
+  useEffect(() => {
+    return () => {
+      if (merchantEngineSound) {
+        merchantEngineSound.stop();
+      }
+    };
+  }, []);
+
   const handlePointClick = (point: Point) => {
     if (!isAdmin || draggingPoint !== null) return;
     console.log(`Clicou no ${point.label}`, point);
