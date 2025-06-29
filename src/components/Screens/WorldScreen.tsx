@@ -21,11 +21,11 @@ export const WorldScreen: React.FC = () => {
           {/* Header */}
           <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-100">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
+              <div className="flex-1"></div>
+              <div className="text-xl text-gray-900 font-medium">Xenoverse</div>
+              <div className="flex-1 flex justify-end">
                 <VolumeControl />
               </div>
-              <div className="text-xl text-gray-900 font-medium">Xenoverse</div>
-              <div className="flex-1"></div>
             </div>
           </div>
 
