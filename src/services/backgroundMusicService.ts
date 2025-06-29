@@ -89,6 +89,27 @@ class BackgroundMusicService {
   }
 
   /**
+   * Configura música sintética como fallback
+   */
+  private setupSyntheticMusic(): void {
+    this.isUsingSynthetic = true;
+    this.tracks = [
+      { id: "synthetic-1", name: "Ambient Space", path: "synthetic" },
+      { id: "synthetic-2", name: "Cosmic Winds", path: "synthetic" },
+      { id: "synthetic-3", name: "Deep Void", path: "synthetic" },
+    ];
+
+    try {
+      this.syntheticAudioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+      console.log("✅ Sistema de música sintética ativado");
+    } catch (error) {
+      console.warn("❌ Web Audio API não suportada:", error);
+      this.isUsingSynthetic = false;
+    }
+  }
+
+  /**
    * Pré-carrega uma faixa específica
    */
   private preloadTrack(path: string): Promise<void> {
