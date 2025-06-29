@@ -212,17 +212,20 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   useEffect(() => {
     const startMusic = async () => {
       try {
+        console.log("🎵 Tentando iniciar música galáctica...");
         await playMusic();
-        console.log("🎵 Música galáctica iniciada");
+        console.log("✅ Música galáctica iniciada com sucesso");
       } catch (error) {
-        console.warn("Não foi possível iniciar música galáctica:", error);
+        console.error("❌ Erro ao iniciar música galáctica:", error);
       }
     };
 
-    startMusic();
+    // Aguarda um pouco para o contexto carregar
+    setTimeout(startMusic, 500);
 
     // Cleanup: pause music when component unmounts
     return () => {
+      console.log("🔇 Pausando música ao sair do mapa");
       pauseMusic().catch(() => {
         // Ignore errors on cleanup
       });
@@ -1075,7 +1078,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         return;
       }
 
-      // Atualiza posição
+      // Atualiza posi��ão
       setShipPosition({ x: proposedX, y: proposedY });
 
       // Atualiza mapa visual
