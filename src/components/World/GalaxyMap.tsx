@@ -1340,6 +1340,96 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     lastMoveTime.current = currentTime;
   };
 
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    // Para o timer de auto-piloto se o touch se mover
+    if (isHolding) {
+      setIsHolding(false);
+      setHoldProgress(0);
+      setHoldStartTime(null);
+    }
+
+    const currentTime = Date.now();
+    const deltaTime = currentTime - lastMoveTime.current;
+    const deltaX = touch.clientX - lastMousePos.current.x;
+    const deltaY = touch.clientY - lastMousePos.current.y;
+
+    // Momentum suavizado baseado no movimento
+    if (deltaTime > 0) {
+      const velX = Math.max(-1.5, Math.min(1.5, deltaX * 0.08));
+      const velY = Math.max(-1.5, Math.min(1.5, deltaY * 0.08));
+      setVelocity({ x: velX, y: velY });
+    }
+
+    // Calcula nova posição proposta
+    const proposedX = wrap(
+      shipPosRef.current.x - deltaX / 12,
+      0,
+      WORLD_CONFIG.width,
+    );
+    const proposedY = wrap(
+      shipPosRef.current.y - deltaY / 12,
+      0,
+      WORLD_CONFIG.height,
+    );
+
+    // Sistema de detecção de colisão
+    const collision = checkCollisionWithBarriers(proposedX, proposedY);
+    const allowMovement = !collision.isColliding;
+
+    if (collision.isColliding && !isColliding) {
+      setIsColliding(true);
+      playBarrierCollisionSound();
+      showCollisionNotification(collision.nearestPointId);
+    } else if (!collision.isColliding && isColliding) {
+      setIsColliding(false);
+    }
+
+    // Atualiza posição da nave
+    const newX = allowMovement ? proposedX : shipPosRef.current.x;
+    const newY = allowMovement ? proposedY : shipPosRef.current.y;
+
+    if (newX !== shipPosRef.current.x || newY !== shipPosRef.current.y) {
+      setShipPosition({ x: newX, y: newY });
+    }
+
+    setShipPosition({ x: newX, y: newY });
+
+    // Só atualiza mapa visual se movimento é permitido
+    if (allowMovement) {
+      // Atualiza mapa visual com wrap
+      let newMapX = mapX.get() + deltaX;
+      let newMapY = mapY.get() + deltaY;
+
+      // Wrap visual do mapa expandido
+      const wrapThreshold = 5000;
+      if (newMapX > wrapThreshold) newMapX -= wrapThreshold * 2;
+      if (newMapX < -wrapThreshold) newMapX += wrapThreshold * 2;
+      if (newMapY > wrapThreshold) newMapY -= wrapThreshold * 2;
+      if (newMapY < -wrapThreshold) newMapY += wrapThreshold * 2;
+
+      mapX.set(newMapX);
+      mapY.set(newMapY);
+    }
+
+    // Rotação responsiva com interpolação suave
+    if (Math.sqrt(deltaX * deltaX + deltaY * deltaY) > 1) {
+      setHasMoved(true);
+      const newAngle = Math.atan2(-deltaY, -deltaX) * (180 / Math.PI) + 90;
+      targetRotation.current = newAngle;
+      lastRotationUpdate.current = Date.now();
+    }
+
+    lastMousePos.current = { x: touch.clientX, y: touch.clientY };
+    lastMoveTime.current = currentTime;
+
+    e.preventDefault();
+  };
+
   const handleMouseUp = () => {
     setIsDragging(false);
     setIsHolding(false);
