@@ -362,7 +362,7 @@ export const StoreScreen: React.FC = () => {
             </div>
             <div className="flex items-center space-x-1">
               <img
-                src="https://cdn.builder.io/api/v1/image/assets%2Ff481900009a94cda953c032479392a30%2F8bb45b10e920461dae796f0f945a1b33?format=webp&width=800"
+                src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F38a7eab3791441c7bc853afba8904317?format=webp&width=800"
                 alt="Xenocash"
                 className="w-6 h-6"
               />
@@ -522,7 +522,7 @@ export const StoreScreen: React.FC = () => {
                             />
                           ) : (
                             <img
-                              src="https://cdn.builder.io/api/v1/image/assets%2Ff481900009a94cda953c032479392a30%2F8bb45b10e920461dae796f0f945a1b33?format=webp&width=800"
+                              src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F38a7eab3791441c7bc853afba8904317?format=webp&width=800"
                               alt="Xenocash"
                               className="w-5 h-5"
                             />
@@ -757,7 +757,7 @@ const StoreItemCard: React.FC<{
             />
           ) : (
             <img
-              src="https://cdn.builder.io/api/v1/image/assets%2Ff481900009a94cda953c032479392a30%2F8bb45b10e920461dae796f0f945a1b33?format=webp&width=800"
+              src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F38a7eab3791441c7bc853afba8904317?format=webp&width=800"
               alt="Xenocash"
               className="w-5 h-5"
             />
@@ -979,7 +979,7 @@ const PurchaseModal: React.FC<{
               />
             ) : (
               <img
-                src="https://cdn.builder.io/api/v1/image/assets%2Ff481900009a94cda953c032479392a30%2F8bb45b10e920461dae796f0f945a1b33?format=webp&width=800"
+                src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F38a7eab3791441c7bc853afba8904317?format=webp&width=800"
                 alt="Xenocash"
                 className="w-7 h-7"
               />
