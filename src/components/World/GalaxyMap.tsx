@@ -1966,6 +1966,61 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         const dy = prev.y - centerY;
         const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
 
+        // Calcula distância para o mundo mais próximo
+        let nearestWorldDistance = 100;
+        if (points && points.length > 0) {
+          nearestWorldDistance = Math.min(
+            ...points.map((point) => {
+              const worldDx = prev.x - point.x;
+              const worldDy = prev.y - point.y;
+              return Math.sqrt(worldDx * worldDx + worldDy * worldDy);
+            }),
+          );
+        }
+
+        // Sistema de pausas perto dos mundos
+        let isPaused = prev.isPaused;
+        let pauseTimer = prev.pauseTimer;
+        let hasRecentlyPaused = prev.hasRecentlyPaused;
+        let pauseCooldown = Math.max(0, prev.pauseCooldown - 1);
+
+        // Se está pausado, diminui o timer
+        if (isPaused) {
+          pauseTimer--;
+          if (pauseTimer <= 0) {
+            isPaused = false;
+            hasRecentlyPaused = true;
+            pauseCooldown = 600; // 10 segundos de cooldown
+          }
+        } else if (
+          nearestWorldDistance < 8 &&
+          !hasRecentlyPaused &&
+          pauseCooldown <= 0
+        ) {
+          // Pausa perto de um mundo
+          isPaused = true;
+          pauseTimer = 180 + Math.random() * 240; // 3-7 segundos de pausa
+        }
+
+        // Se está pausado, não move
+        if (isPaused) {
+          return {
+            ...prev,
+            isPaused,
+            pauseTimer,
+            hasRecentlyPaused,
+            pauseCooldown,
+            distanceToPlayer,
+            nearestWorldDistance,
+            isMoving: false,
+          };
+        }
+
+        // Reset flag se está longe dos mundos
+        if (nearestWorldDistance > 15) {
+          hasRecentlyPaused = false;
+        }
+
         // Sistema de mudança suave de direção
         let newDirection = prev.direction;
         let newTargetDirection = prev.targetDirection;
