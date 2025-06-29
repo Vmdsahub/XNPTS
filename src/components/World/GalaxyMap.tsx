@@ -2899,11 +2899,6 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         )}
       </AnimatePresence>
 
-      {/* Music Controls */}
-      <div className="absolute top-4 right-4 z-40">
-        <MusicControls size="sm" showTrackInfo={false} />
-      </div>
-
       {/* Coordenadas simplificadas na parte inferior */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/20 text-xs font-mono font-thin whitespace-nowrap">
         X: {mapX.get().toFixed(1)} Y: {mapY.get().toFixed(1)}
