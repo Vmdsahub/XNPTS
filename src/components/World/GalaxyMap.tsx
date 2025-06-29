@@ -2127,6 +2127,38 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               },
             }}
           />
+
+          {/* Nave navegante dentro da barreira */}
+          <motion.div
+            className="absolute cursor-pointer z-20"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: `translate(-50%, -50%) rotate(${wanderingShipAngle}deg) translateY(-800px)`,
+              pointerEvents: "auto",
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowShipModal(true);
+            }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <motion.img
+              src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F35b6bdfaaf2f41f2882a22458f10917d?format=webp&width=800"
+              alt="Nave Navegante"
+              className="w-16 h-16"
+              animate={{
+                y: [0, -3, 0, 3, 0],
+                rotate: [0, 2, 0, -2, 0],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          </motion.div>
         </div>
         {/* Novos pontos clicáveis */}
         {points.map((point) => (
