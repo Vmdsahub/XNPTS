@@ -54,6 +54,7 @@ class BackgroundMusicService {
   private crossfadeNextTrack: HTMLAudioElement | null = null;
 
   constructor() {
+    this.originalTracksCount = this.tracks.length;
     this.preloadTracks();
   }
 
