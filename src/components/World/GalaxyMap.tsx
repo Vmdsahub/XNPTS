@@ -239,19 +239,17 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   const [wanderingShip, setWanderingShip] = useState({
     x: 50, // posição relativa na barreira
     y: 45,
-    targetX: 60,
-    targetY: 55,
-    controlX: 55, // ponto de controle para curva Bézier
-    controlY: 50,
+    velocityX: 0, // velocidade atual em X
+    velocityY: 0, // velocidade atual em Y
     rotation: 0,
-    targetRotation: 0,
-    isMoving: false,
-    isPaused: true, // Começa pausado
-    pauseTimer: 60, // Timer inicial
-    speed: 0.008, // Velocidade mais lenta e suave
-    progress: 0, // progresso na curva atual (0-1)
-    behavior: "paused", // Começa pausado
-    distanceToPlayer: 100, // Distância ao jogador
+    baseSpeed: 0.015, // velocidade base muito baixa
+    maxSpeed: 0.03, // velocidade máxima
+    direction: Math.random() * Math.PI * 2, // direção atual em radianos
+    targetDirection: Math.random() * Math.PI * 2, // direção alvo
+    directionChangeTimer: 0,
+    nextDirectionChange: 300 + Math.random() * 600, // 5-15 segundos para próxima mudança
+    isMoving: true,
+    distanceToPlayer: 100,
   });
 
   const mapRef = useRef<HTMLDivElement>(null);
