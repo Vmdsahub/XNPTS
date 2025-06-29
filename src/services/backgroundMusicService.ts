@@ -460,61 +460,61 @@ class BackgroundMusicService {
   }
 
   /**
-   * Para faixas sintéticas
+   * Reproduz uma faixa sintética usando Web Audio API
    */
-  private stopSyntheticTrack(): void {
-    this.currentOscillators.forEach((osc) => {
-      try {
-        osc.stop();
-      } catch (e) {
-        // Ignora erros se já parou
-      }
+  private playSyntheticTrack(index: number): void {
+    if (!this.syntheticAudioContext) return;
+
+    // Para osciladores anteriores
+    this.stopSyntheticTrack();
+
+    const track = this.tracks[index];
+    const ctx = this.syntheticAudioContext;
+
+    // Cria master gain node para controle de volume
+    this.masterGainNode = ctx.createGain();
+    this.masterGainNode.gain.setValueAtTime(this.volume * 0.3, ctx.currentTime);
+    this.masterGainNode.connect(ctx.destination);
+
+    // Frequências base para cada faixa
+    const frequencies = [
+      [220, 261.63, 329.63], // Am chord
+      [174.61, 220, 261.63], // Fm chord
+      [146.83, 185, 233.08], // Dm chord
+    ];
+
+    const chordFreqs = frequencies[index % frequencies.length];
+
+    // Cria osciladores simples mas efetivos
+    chordFreqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+      // Volume diminui com harmônicos
+      const volume = 0.15 / (i + 1);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 2);
+
+      osc.connect(gain);
+      gain.connect(this.masterGainNode);
+
+      osc.start();
+      this.currentOscillators.push(osc);
     });
-    this.currentOscillators = [];
-    this.currentGainNodes = [];
+
+    this.currentTrackIndex = index;
+    console.log(`🎵 Reproduzindo faixa sintética ${index + 1}`);
+
+    // Auto próxima faixa após 180 segundos
+    setTimeout(() => {
+      if (this.isPlaying && this.isUsingSynthetic) {
+        this.nextTrack();
+      }
+    }, 180000);
   }
-
-  /**
-   * Próxima faixa da playlist
-   */
-  async nextTrack(): Promise<void> {
-    if (!this.isPlaying) return;
-
-    const nextIndex = (this.currentTrackIndex + 1) % this.tracks.length;
-    await this.playTrack(nextIndex);
-  }
-
-  /**
-   * Faixa anterior da playlist
-   */
-  async previousTrack(): Promise<void> {
-    if (!this.isPlaying) return;
-
-    const prevIndex =
-      this.currentTrackIndex === 0
-        ? this.tracks.length - 1
-        : this.currentTrackIndex - 1;
-    await this.playTrack(prevIndex);
-  }
-
-  /**
-   * Fade in gradual
-   */
-  private fadeIn(audio: HTMLAudioElement): void {
-    this.clearFadeInterval();
-
-    let currentStep = 0;
-    const stepVolume = this.volume / this.fadeSteps;
-    const stepTime = this.fadeDuration / this.fadeSteps;
-
-    audio.volume = 0;
-
-    this.fadeInterval = setInterval(() => {
-      currentStep++;
-      audio.volume = Math.min(stepVolume * currentStep, this.volume);
-
-      if (currentStep >= this.fadeSteps) {
-        this.clearFadeInterval();
       }
     }, stepTime);
   }
@@ -589,12 +589,7 @@ class BackgroundMusicService {
    * Define o volume (0 a 1)
    */
   setVolume(newVolume: number): void {
-    console.log(
-      "🔊 Service: Mudando volume de",
-      this.volume,
-      "para",
-      newVolume,
-    );
+    console.log("🔊 Service: Mudando volume de", this.volume, "para", newVolume);
     this.volume = Math.max(0, Math.min(1, newVolume));
 
     if (this.isUsingSynthetic && this.masterGainNode) {
@@ -604,7 +599,7 @@ class BackgroundMusicService {
         if (ctx) {
           this.masterGainNode.gain.linearRampToValueAtTime(
             this.volume * 0.3, // Volume base reduzido
-            ctx.currentTime + 0.1,
+            ctx.currentTime + 0.1
           );
           console.log("✅ Volume sintético ajustado para:", this.volume);
         }
