@@ -1859,16 +1859,66 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     setPoints(newPoints);
   };
 
-  // Animação da nave navegante dentro da barreira
+  // Sistema de navegação natural da nave mercante
   useEffect(() => {
     let animationId: number;
 
-    const animateWanderingShip = () => {
-      setWanderingShipAngle((prev) => (prev + 0.05) % 360); // Movimento muito lento
-      animationId = requestAnimationFrame(animateWanderingShip);
+    const generateRandomTarget = () => {
+      // Gera um ponto aleatório dentro da barreira circular
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.random() * 30 + 10; // Entre 10% e 40% do raio (bem dentro da barreira)
+
+      const targetX = 50 + Math.cos(angle) * radius;
+      const targetY = 50 + Math.sin(angle) * radius;
+
+      return { targetX, targetY };
     };
 
-    animationId = requestAnimationFrame(animateWanderingShip);
+    const updateWanderingShip = () => {
+      setWanderingShip((prev) => {
+        const dx = prev.targetX - prev.x;
+        const dy = prev.targetY - prev.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Se chegou perto do alvo, gera um novo
+        if (distance < 2) {
+          const { targetX, targetY } = generateRandomTarget();
+          return {
+            ...prev,
+            targetX,
+            targetY,
+            isMoving: true,
+          };
+        }
+
+        // Move em direção ao alvo
+        if (distance > 0.1) {
+          const newX = prev.x + (dx / distance) * prev.speed;
+          const newY = prev.y + (dy / distance) * prev.speed;
+
+          // Calcula rotação baseada na direção do movimento
+          const newRotation = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+
+          return {
+            ...prev,
+            x: newX,
+            y: newY,
+            rotation: newRotation,
+            isMoving: true,
+          };
+        }
+
+        return { ...prev, isMoving: false };
+      });
+
+      animationId = requestAnimationFrame(updateWanderingShip);
+    };
+
+    // Inicializa com um alvo
+    const { targetX, targetY } = generateRandomTarget();
+    setWanderingShip((prev) => ({ ...prev, targetX, targetY }));
+
+    animationId = requestAnimationFrame(updateWanderingShip);
 
     return () => {
       if (animationId) {
@@ -2134,7 +2184,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             }}
             transition={{
               rotate: {
-                duration: 600, // Rotação muito mais lenta - 10 minutos por volta
+                duration: 600, // Rota��ão muito mais lenta - 10 minutos por volta
                 repeat: Infinity,
                 ease: "linear",
               },
