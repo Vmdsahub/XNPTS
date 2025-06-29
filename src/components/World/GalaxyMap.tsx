@@ -1966,6 +1966,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         handleMouseUp();
         handlePointMouseUp();
       }}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Simple progress bar for auto-pilot activation */}
       {isHolding && holdProgress > 0 && (
