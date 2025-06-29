@@ -242,8 +242,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     velocityX: 0, // velocidade atual em X
     velocityY: 0, // velocidade atual em Y
     rotation: 0,
-    baseSpeed: 0.015, // velocidade base muito baixa
-    maxSpeed: 0.03, // velocidade máxima
+    baseSpeed: 0.05, // velocidade base aumentada
+    maxSpeed: 0.1, // velocidade máxima aumentada
     direction: Math.random() * Math.PI * 2, // direção atual em radianos
     targetDirection: Math.random() * Math.PI * 2, // direção alvo
     directionChangeTimer: 0,
@@ -2148,13 +2148,11 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
   useEffect(() => {
     const distance = wanderingShip.distanceToPlayer;
-    const maxDistance = 25; // Distância aumentada para melhor audibilidade
-    const shouldPlaySound =
-      distance < maxDistance &&
-      (wanderingShip.isMoving || !wanderingShip.isPaused); // Som mais permissivo
+    const maxDistance = 30; // Distância ainda maior para melhor audibilidade
+    const shouldPlaySound = distance < maxDistance; // Som sempre ativo quando perto
 
     console.log(
-      `🔊 Som da nave: distância=${distance.toFixed(2)}, deveria tocar=${shouldPlaySound}`,
+      `🔊 Som da nave: distância=${distance.toFixed(2)}, deveria tocar=${shouldPlaySound}, movendo=${wanderingShip.isMoving}, pausado=${wanderingShip.isPaused}`,
     );
 
     if (shouldPlaySound) {
@@ -2163,7 +2161,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         0,
         Math.min(1, distance / maxDistance),
       );
-      const volume = (1 - normalizedDistance) * 0.25; // Volume máximo 0.25
+      const volume = (1 - normalizedDistance) * 0.5; // Volume máximo aumentado para 0.5
 
       if (!merchantEngineSound) {
         // Cria um som de motor diferente para a nave mercante
