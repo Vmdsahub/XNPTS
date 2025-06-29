@@ -41,6 +41,8 @@ class BackgroundMusicService {
     },
   ];
 
+  private originalTracksCount: number;
+
   private currentTrack: HTMLAudioElement | null = null;
   private currentTrackIndex: number = 0;
   private isPlaying: boolean = false;
