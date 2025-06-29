@@ -2036,6 +2036,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 ...route,
                 progress: 0,
                 isMoving: true,
+                distanceToPlayer,
               };
             }
           }
