@@ -425,3 +425,74 @@ export const playBarrierCollisionSound = (): Promise<void> => {
     console.warn("Collision sound failed:", error.message);
   });
 };
+
+/**
+ * Creates an auto pilot activation sound using Web Audio API
+ */
+const playAutoPilotActivationSound = (): Promise<void> => {
+  return new Promise((resolve) => {
+    try {
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+
+      const startTime = audioContext.currentTime;
+
+      // Create oscillators for a futuristic activation sound
+      const osc1 = audioContext.createOscillator();
+      const osc2 = audioContext.createOscillator();
+      const gain1 = audioContext.createGain();
+      const gain2 = audioContext.createGain();
+      const masterGain = audioContext.createGain();
+
+      // Connect audio nodes
+      osc1.connect(gain1);
+      osc2.connect(gain2);
+      gain1.connect(masterGain);
+      gain2.connect(masterGain);
+      masterGain.connect(audioContext.destination);
+
+      // Configure oscillators for a sci-fi activation sound
+      osc1.type = "sine";
+      osc2.type = "triangle";
+
+      // Rising tone sequence - sounds like system activation
+      osc1.frequency.setValueAtTime(220, startTime);
+      osc1.frequency.exponentialRampToValueAtTime(440, startTime + 0.3);
+      osc1.frequency.exponentialRampToValueAtTime(880, startTime + 0.6);
+
+      osc2.frequency.setValueAtTime(330, startTime + 0.1);
+      osc2.frequency.exponentialRampToValueAtTime(660, startTime + 0.4);
+      osc2.frequency.exponentialRampToValueAtTime(1320, startTime + 0.7);
+
+      // Volume envelopes for smooth activation sound
+      gain1.gain.setValueAtTime(0, startTime);
+      gain1.gain.linearRampToValueAtTime(0.08, startTime + 0.05);
+      gain1.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+
+      gain2.gain.setValueAtTime(0, startTime + 0.1);
+      gain2.gain.linearRampToValueAtTime(0.05, startTime + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.001, startTime + 0.9);
+
+      // Master volume
+      masterGain.gain.setValueAtTime(1, startTime);
+
+      // Start and stop oscillators
+      osc1.start(startTime);
+      osc1.stop(startTime + 0.8);
+
+      osc2.start(startTime + 0.1);
+      osc2.stop(startTime + 0.9);
+
+      setTimeout(() => resolve(), 1000);
+    } catch (error) {
+      console.warn("Auto pilot activation sound failed:", error);
+      resolve();
+    }
+  });
+};
+
+export const playAutoPilotActivationSound = (): Promise<void> => {
+  return playAutoPilotActivationSound().catch((error) => {
+    console.warn("Auto pilot activation sound failed:", error.message);
+  });
+};
