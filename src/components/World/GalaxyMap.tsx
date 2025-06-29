@@ -1946,27 +1946,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
   // Sistema de navegação inteligente com curvas suaves
   useEffect(() => {
-    let animationId: number;
-
-    // Função auxiliar para normalizar ângulos
-    const normalizeAngle = (angle) => {
-      while (angle < 0) angle += Math.PI * 2;
-      while (angle >= Math.PI * 2) angle -= Math.PI * 2;
-      return angle;
-    };
-
-    let lastUpdateTime = Date.now();
-    const targetFPS = 30; // Limit to 30 FPS instead of 60 for better performance
-    const frameInterval = 1000 / targetFPS;
-
     const updateWanderingShip = () => {
-      const now = Date.now();
-      if (now - lastUpdateTime < frameInterval) {
-        animationId = requestAnimationFrame(updateWanderingShip);
-        return;
-      }
-      lastUpdateTime = now;
-
       setWanderingShip((prev) => {
         // Calcula distância do jogador (centro do mapa) para a nave
         const centerX = 50;
@@ -2119,8 +2099,6 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
           nearestWorldDistance,
         };
       });
-
-      animationId = requestAnimationFrame(updateWanderingShip);
     };
 
     // Inicializa movimento suave da nave
@@ -2131,12 +2109,11 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       targetDirection: Math.random() * Math.PI * 2,
     }));
 
-    animationId = requestAnimationFrame(updateWanderingShip);
+    // Usa setInterval para movimento mais consistente (60 FPS)
+    const intervalId = setInterval(updateWanderingShip, 16);
 
     return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -2253,11 +2230,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         setMerchantEngineSound(null);
       }
     }
-  }, [
-    wanderingShip.isMoving,
-    wanderingShip.isPaused,
-    wanderingShip.distanceToPlayer,
-  ]);
+  }, [wanderingShip.distanceToPlayer, merchantEngineSound]);
 
   // Cleanup do som da nave mercante quando componente desmonta
   useEffect(() => {
