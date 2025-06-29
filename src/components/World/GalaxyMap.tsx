@@ -1003,7 +1003,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     showCollisionNotification,
   ]);
 
-  // Sistema de rastreamento do mouse durante auto-piloto
+  // Sistema de rastreamento do mouse/touch durante auto-piloto
   useEffect(() => {
     if (!isAutoPilot) return;
 
@@ -1012,10 +1012,21 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       updateAutoPilotDirection(e.clientX, e.clientY);
     };
 
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (touch) {
+        setCurrentMousePos({ x: touch.clientX, y: touch.clientY });
+        updateAutoPilotDirection(touch.clientX, touch.clientY);
+        e.preventDefault();
+      }
+    };
+
     document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("touchmove", handleTouchMove);
     };
   }, [isAutoPilot, updateAutoPilotDirection]);
 
