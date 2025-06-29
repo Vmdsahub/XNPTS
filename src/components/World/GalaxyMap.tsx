@@ -5,7 +5,12 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import { motion, useMotionValue, animate } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  animate,
+  AnimatePresence,
+} from "framer-motion";
 import { PlayerShip } from "./PlayerShip";
 import {
   playBarrierCollisionSound,
