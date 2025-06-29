@@ -1944,31 +1944,11 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   useEffect(() => {
     let animationId: number;
 
-    const generateNewRoute = () => {
-      // Gera um ponto aleatório dentro da barreira circular
-      const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * 25 + 15; // Entre 15% e 40% do raio
-
-      const targetX = 50 + Math.cos(angle) * radius;
-      const targetY = 50 + Math.sin(angle) * radius;
-
-      // Gera ponto de controle para curva Bézier (offset perpendicular)
-      const controlAngle = angle + (Math.random() - 0.5) * Math.PI * 0.6; // Variação de até 54°
-      const controlRadius = radius * (0.3 + Math.random() * 0.4); // 30-70% da distância
-      const controlX = 50 + Math.cos(controlAngle) * controlRadius;
-      const controlY = 50 + Math.sin(controlAngle) * controlRadius;
-
-      return { targetX, targetY, controlX, controlY };
-    };
-
-    // Fun��ão de interpolação de curva Bézier quadrática
-    const bezierInterpolate = (start, control, end, t) => {
-      const oneMinusT = 1 - t;
-      return (
-        oneMinusT * oneMinusT * start +
-        2 * oneMinusT * t * control +
-        t * t * end
-      );
+    // Função auxiliar para normalizar ângulos
+    const normalizeAngle = (angle) => {
+      while (angle < 0) angle += Math.PI * 2;
+      while (angle >= Math.PI * 2) angle -= Math.PI * 2;
+      return angle;
     };
 
     const updateWanderingShip = () => {
