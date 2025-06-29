@@ -20,6 +20,7 @@ interface Point {
   label: string;
   image: string;
   type: string;
+  scale?: number;
 }
 
 // 7 pontos distribuídos em círculo ao redor do centro
@@ -87,6 +88,7 @@ const createDefaultPoints = (): Point[] => {
       label: pointData[i].label,
       type: pointData[i].type,
       image: pointData[i].image,
+      scale: 1,
     });
   }
 
@@ -116,6 +118,20 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
   // Load points from localStorage or use defaults
   const [points, setPoints] = useState<Point[]>(() => {
+    const saved = localStorage.getItem("xenopets-galaxy-points");
+    if (saved) {
+      try {
+        const savedPoints = JSON.parse(saved);
+        // Ensure all points have scale property
+        return savedPoints.map((point: Point) => ({
+          ...point,
+          scale: point.scale || 1,
+        }));
+      } catch (e) {
+        console.warn("Erro ao carregar pontos salvos:", e);
+      }
+    }
+
     // Força a recriação dos pontos com as novas imagens
     const defaultPoints = createDefaultPoints();
     localStorage.setItem(
@@ -137,6 +153,9 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   // Drag states for points
   const [draggingPoint, setDraggingPoint] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [resizingPoint, setResizingPoint] = useState<number | null>(null);
+  const [resizeStartScale, setResizeStartScale] = useState<number>(1);
+  const [resizeStartY, setResizeStartY] = useState<number>(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isColliding, setIsColliding] = useState(false);
   const [collisionNotification, setCollisionNotification] = useState<{
@@ -1312,7 +1331,24 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   // Mouse events globais para capturar movimento fora do elemento
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
-      // Handle point dragging first
+      // Handle point resizing first
+      if (isAdmin && resizingPoint !== null) {
+        const deltaY = e.clientY - resizeStartY;
+        const scaleFactor = 1 + deltaY / 100; // 100px movement = 1x scale change
+        const newScale = Math.max(
+          0.3,
+          Math.min(3, resizeStartScale * scaleFactor),
+        );
+
+        const newPoints = points.map((p) =>
+          p.id === resizingPoint ? { ...p, scale: newScale } : p,
+        );
+
+        setPoints(newPoints);
+        return;
+      }
+
+      // Handle point dragging
       if (isAdmin && draggingPoint !== null) {
         const rect = containerRef.current?.getBoundingClientRect();
         if (!rect) return;
@@ -1426,6 +1462,15 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     };
 
     const handleGlobalMouseUp = () => {
+      // Handle point resizing end
+      if (isAdmin && resizingPoint !== null) {
+        savePoints(points);
+        setResizingPoint(null);
+        setResizeStartScale(1);
+        setResizeStartY(0);
+        return;
+      }
+
       // Handle point dragging end
       if (isAdmin && draggingPoint !== null) {
         savePoints(points);
@@ -1496,6 +1541,14 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
     e.preventDefault();
     e.stopPropagation();
+
+    // Check if holding Ctrl for resize mode
+    if (e.ctrlKey) {
+      setResizingPoint(point.id);
+      setResizeStartScale(point.scale || 1);
+      setResizeStartY(e.clientY);
+      return;
+    }
 
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -1713,7 +1766,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         </div>
         {/* Novos pontos clicáveis */}
         {points.map((point) => (
-          <div
+          <motion.div
             key={point.id}
             className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${
               isAdmin
@@ -1727,6 +1780,31 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             }}
             onClick={() => handlePointClick(point)}
             onMouseDown={(e) => handlePointMouseDown(e, point)}
+            animate={{
+              y: [0, -5 - point.id * 0.8, 0, 3.5 + point.id * 0.5, 0],
+              x: [0, 2 + point.id * 0.4, 0, -2.5 - point.id * 0.3, 0],
+              rotate: [0, 1 + point.id * 0.15, 0, -1.3 - point.id * 0.1, 0],
+            }}
+            transition={{
+              y: {
+                duration: 6 + point.id * 0.8,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: point.id * 1,
+              },
+              x: {
+                duration: 7 + point.id * 1,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: point.id * 1.3,
+              },
+              rotate: {
+                duration: 9 + point.id * 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: point.id * 1.8,
+              },
+            }}
           >
             <div className="relative group">
               {/* Imagem do planeta/estação */}
@@ -1734,13 +1812,18 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 className={`w-48 h-48 transition-all duration-300 relative ${
                   draggingPoint === point.id
                     ? "scale-110 brightness-110"
-                    : "hover:scale-105 hover:brightness-110"
+                    : resizingPoint === point.id
+                      ? "brightness-125"
+                      : "hover:scale-105 hover:brightness-110"
                 }`}
                 style={{
+                  transform: `scale(${point.scale || 1})`,
                   filter:
                     draggingPoint === point.id
-                      ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8))"
-                      : "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))",
+                      ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
+                      : resizingPoint === point.id
+                        ? "drop-shadow(0 0 25px rgba(0, 255, 255, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
+                        : "drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1))",
                 }}
               >
                 <img
@@ -1774,14 +1857,20 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               )}
 
               {/* Tooltip melhorado */}
-              <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-gradient-to-br from-gray-900 to-black text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-gray-600 shadow-xl">
+              <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 bg-gradient-to-br from-gray-900 to-black text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-gray-600 shadow-xl">
                 <div className="font-bold text-cyan-300">{point.label}</div>
                 <div className="text-gray-300 text-xs capitalize">
                   {point.type}
                 </div>
+                {point.scale && point.scale !== 1 && (
+                  <div className="text-blue-300 text-xs">
+                    Escala: {point.scale.toFixed(1)}x
+                  </div>
+                )}
                 {isAdmin && (
                   <div className="text-yellow-400 text-xs mt-1">
-                    ⚡ Arraste para mover
+                    <div>⚡ Arraste para mover</div>
+                    <div>🔧 Ctrl+Arraste para redimensionar</div>
                   </div>
                 )}
 
@@ -1789,7 +1878,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </motion.div>
 
