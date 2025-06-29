@@ -829,7 +829,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         // Normaliza a direç��o e aplica força de repulsão
         const normalizedX = repelDirectionX / distance;
         const normalizedY = repelDirectionY / distance;
-        const repelForce = 15; // For����a da repulsão
+        const repelForce = 15; // For��a da repulsão
 
         // Para o movimento atual imediatamente
         setVelocity({ x: 0, y: 0 });
@@ -1899,14 +1899,24 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
           const newX = prev.x + (dx / distance) * prev.speed;
           const newY = prev.y + (dy / distance) * prev.speed;
 
-          // Calcula rotação baseada na direção do movimento
-          const newRotation = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+          // Calcula rotação alvo baseada na direção do movimento
+          const targetRotation = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+
+          // Interpola rotação suavemente para curvas naturais
+          let rotationDiff = targetRotation - prev.rotation;
+
+          // Ajusta para rotação mais curta (360° wrap)
+          if (rotationDiff > 180) rotationDiff -= 360;
+          if (rotationDiff < -180) rotationDiff += 360;
+
+          const newRotation = prev.rotation + rotationDiff * 0.05; // Interpolação suave
 
           return {
             ...prev,
             x: newX,
             y: newY,
             rotation: newRotation,
+            targetRotation,
             isMoving: true,
           };
         }
