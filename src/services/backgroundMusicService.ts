@@ -415,6 +415,8 @@ class BackgroundMusicService {
         osc.start(time);
         osc.stop(time + noteLength);
 
+        this.currentGainNodes.push(gain);
+
         time += noteLength + 0.5; // Pausa entre notas
       });
     }
