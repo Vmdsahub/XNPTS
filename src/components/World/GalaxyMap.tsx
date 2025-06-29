@@ -2065,8 +2065,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         if (distanceFromCenter > 35) {
           // Reflexão suave sem teleporte - só muda direção
           const angleToCenter = Math.atan2(50 - prev.y, 50 - prev.x);
-          bounceDirection =
-            angleToCenter + Math.PI + (Math.random() - 0.5) * 0.8;
+          bounceDirection = angleToCenter + Math.PI + (Math.random() - 0.5) * 0.8;
 
           // Mantém posição atual (não teleporta) e só ajusta se necessário
           if (distanceFromCenter > 36) {
@@ -2132,17 +2131,18 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
   useEffect(() => {
     const distance = wanderingShip.distanceToPlayer;
-    const maxDistance = 25; // Distância máxima para ouvir som
+    const maxDistance = 20; // Distância máxima reduzida para ouvir som
     const shouldPlaySound =
       wanderingShip.isMoving &&
       !wanderingShip.isPaused &&
       distance < maxDistance;
+
+    console.log(`🔊 Som da nave: distância=${distance.toFixed(2)}, deveria tocar=${shouldPlaySound}`);
+
     if (shouldPlaySound) {
-      // Calcula volume baseado na distância (0.0 a 0.3 para não interferir)
-      const volume = Math.max(
-        0,
-        Math.min(0.3, ((maxDistance - distance) / maxDistance) * 0.3),
-      );
+      // Calcula volume baseado na distância com curva mais suave
+      const normalizedDistance = Math.max(0, Math.min(1, distance / maxDistance));
+      const volume = (1 - normalizedDistance) * 0.25; // Volume máximo 0.25
 
       if (!merchantEngineSound) {
         // Cria um som de motor diferente para a nave mercante
@@ -2163,19 +2163,20 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
           gain2.connect(masterGain);
           masterGain.connect(audioContext.destination);
 
-          // Som mais grave e sutil para nave mercante
+          // Som diferenciado para nave mercante - mais grave
           osc1.type = "triangle";
           osc2.type = "sine";
 
-          osc1.frequency.setValueAtTime(80, startTime);
-          osc2.frequency.setValueAtTime(160, startTime);
+          osc1.frequency.setValueAtTime(70, startTime); // Mais grave
+          osc2.frequency.setValueAtTime(140, startTime); // Harmônico
 
-          // Volumes mais baixos
-          gain1.gain.setValueAtTime(volume * 0.5, startTime);
-          gain2.gain.setValueAtTime(volume * 0.3, startTime);
+          // Volumes iniciais baseados na distância
+          gain1.gain.setValueAtTime(volume * 0.6, startTime);
+          gain2.gain.setValueAtTime(volume * 0.4, startTime);
 
+          // Fade-in suave
           masterGain.gain.setValueAtTime(0, startTime);
-          masterGain.gain.linearRampToValueAtTime(1, startTime + 0.2);
+          masterGain.gain.linearRampToValueAtTime(1, startTime + 0.3);
 
           osc1.start(startTime);
           osc2.start(startTime);
@@ -2184,42 +2185,50 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             stop: () => {
               try {
                 const stopTime = audioContext.currentTime;
-                masterGain.gain.linearRampToValueAtTime(0, stopTime + 0.2);
+                masterGain.gain.linearRampToValueAtTime(0, stopTime + 0.3);
                 setTimeout(() => {
-                  osc1.stop();
-                  osc2.stop();
-                  audioContext.close();
-                }, 250);
+                  try {
+                    osc1.stop();
+                    osc2.stop();
+                    audioContext.close();
+                  } catch (e) {
+                    // Ignora erros de stop
+                  }
+                }, 350);
               } catch (e) {
-                // Ignora erros
+                console.warn("Error stopping merchant sound:", e);
               }
             },
             setVolume: (vol: number) => {
               try {
-                gain1.gain.setValueAtTime(vol * 0.5, audioContext.currentTime);
-                gain2.gain.setValueAtTime(vol * 0.3, audioContext.currentTime);
+                const currentTime = audioContext.currentTime;
+                gain1.gain.linearRampToValueAtTime(vol * 0.6, currentTime + 0.1);
+                gain2.gain.linearRampToValueAtTime(vol * 0.4, currentTime + 0.1);
               } catch (e) {
-                // Ignora erros
+                console.warn("Error setting volume:", e);
               }
             },
           };
 
           setMerchantEngineSound(soundControl);
+          console.log(`🎵 Som da nave criado com volume: ${volume.toFixed(3)}`);
         } catch (e) {
-          console.warn("Merchant engine sound failed:", e);
+          console.warn("Merchant engine sound creation failed:", e);
         }
       } else {
-        // Atualiza volume do som existente
+        // Atualiza volume do som existente com suavidade
         merchantEngineSound.setVolume(volume);
+        console.log(`🔊 Volume atualizado: ${volume.toFixed(3)}`);
       }
     } else {
       // Para o som se existir
       if (merchantEngineSound) {
+        console.log("🔇 Parando som da nave");
         merchantEngineSound.stop();
         setMerchantEngineSound(null);
       }
     }
-  }, [
+  }, [wanderingShip.isMoving, wanderingShip.isPaused, wanderingShip.distanceToPlayer]);
     wanderingShip.isMoving,
     wanderingShip.isPaused,
     wanderingShip.distanceToPlayer,
