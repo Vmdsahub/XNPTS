@@ -1868,74 +1868,160 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     setPoints(newPoints);
   };
 
-  // Sistema de navegação natural da nave mercante
+  // Sistema de navegação inteligente com curvas suaves
   useEffect(() => {
     let animationId: number;
 
-    const generateRandomTarget = () => {
+    const generateNewRoute = () => {
       // Gera um ponto aleatório dentro da barreira circular
       const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * 30 + 10; // Entre 10% e 40% do raio (bem dentro da barreira)
+      const radius = Math.random() * 25 + 15; // Entre 15% e 40% do raio
 
       const targetX = 50 + Math.cos(angle) * radius;
       const targetY = 50 + Math.sin(angle) * radius;
 
-      return { targetX, targetY };
+      // Gera ponto de controle para curva Bézier (offset perpendicular)
+      const controlAngle = angle + (Math.random() - 0.5) * Math.PI * 0.6; // Variação de até 54°
+      const controlRadius = radius * (0.3 + Math.random() * 0.4); // 30-70% da distância
+      const controlX = 50 + Math.cos(controlAngle) * controlRadius;
+      const controlY = 50 + Math.sin(controlAngle) * controlRadius;
+
+      return { targetX, targetY, controlX, controlY };
+    };
+
+    // Função de interpolação de curva Bézier quadrática
+    const bezierInterpolate = (start, control, end, t) => {
+      const oneMinusT = 1 - t;
+      return (
+        oneMinusT * oneMinusT * start +
+        2 * oneMinusT * t * control +
+        t * t * end
+      );
     };
 
     const updateWanderingShip = () => {
       setWanderingShip((prev) => {
-        const dx = prev.targetX - prev.x;
-        const dy = prev.targetY - prev.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        // Se chegou perto do alvo, gera um novo
-        if (distance < 2) {
-          const { targetX, targetY } = generateRandomTarget();
-          return {
-            ...prev,
-            targetX,
-            targetY,
-            isMoving: true,
-          };
+        // Sistema de comportamentos
+        if (prev.behavior === "paused") {
+          if (prev.pauseTimer > 0) {
+            return {
+              ...prev,
+              pauseTimer: prev.pauseTimer - 1,
+              isMoving: false,
+              isPaused: true,
+            };
+          } else {
+            // Acabou a pausa, volta a patrulhar
+            const route = generateNewRoute();
+            return {
+              ...prev,
+              ...route,
+              behavior: "patrolling",
+              progress: 0,
+              isPaused: false,
+            };
+          }
         }
 
-        // Move em direção ao alvo
-        if (distance > 0.1) {
-          const newX = prev.x + (dx / distance) * prev.speed;
-          const newY = prev.y + (dy / distance) * prev.speed;
+        // Sistema de movimento com curva Bézier
+        if (prev.behavior === "patrolling") {
+          // Incrementa progresso na curva
+          const newProgress = prev.progress + prev.speed;
 
-          // Calcula rotação alvo baseada na direção do movimento
-          const targetRotation = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+          if (newProgress >= 1) {
+            // Chegou ao destino - decide próxima ação
+            const rand = Math.random();
+            if (rand < 0.3) {
+              // 30% chance de pausar
+              return {
+                ...prev,
+                behavior: "paused",
+                pauseTimer: 60 + Math.random() * 120, // 1-3 segundos a 60fps
+                isMoving: false,
+                isPaused: true,
+                progress: 0,
+              };
+            } else {
+              // 70% chance de continuar patrulhando
+              const route = generateNewRoute();
+              return {
+                ...prev,
+                ...route,
+                progress: 0,
+                isMoving: true,
+              };
+            }
+          }
 
-          // Interpola rotação suavemente para curvas naturais
-          let rotationDiff = targetRotation - prev.rotation;
+          // Calcula posição na curva Bézier
+          const newX = bezierInterpolate(
+            prev.x,
+            prev.controlX,
+            prev.targetX,
+            newProgress,
+          );
+          const newY = bezierInterpolate(
+            prev.y,
+            prev.controlY,
+            prev.targetY,
+            newProgress,
+          );
 
-          // Ajusta para rotação mais curta (360° wrap)
-          if (rotationDiff > 180) rotationDiff -= 360;
-          if (rotationDiff < -180) rotationDiff += 360;
+          // Calcula direção do movimento para rotação suave
+          const futureProgress = Math.min(newProgress + 0.05, 1);
+          const futureX = bezierInterpolate(
+            prev.x,
+            prev.controlX,
+            prev.targetX,
+            futureProgress,
+          );
+          const futureY = bezierInterpolate(
+            prev.y,
+            prev.controlY,
+            prev.targetY,
+            futureProgress,
+          );
 
-          const newRotation = prev.rotation + rotationDiff * 0.05; // Interpolação suave
+          const dx = futureX - newX;
+          const dy = futureY - newY;
 
-          return {
-            ...prev,
-            x: newX,
-            y: newY,
-            rotation: newRotation,
-            targetRotation,
-            isMoving: true,
-          };
+          if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
+            const targetRotation = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+
+            // Interpolação suave da rotação
+            let rotationDiff = targetRotation - prev.rotation;
+            if (rotationDiff > 180) rotationDiff -= 360;
+            if (rotationDiff < -180) rotationDiff += 360;
+
+            const newRotation = prev.rotation + rotationDiff * 0.08; // Rotação mais responsiva
+
+            return {
+              ...prev,
+              x: newX,
+              y: newY,
+              rotation: newRotation,
+              progress: newProgress,
+              isMoving: true,
+              isPaused: false,
+            };
+          }
         }
 
-        return { ...prev, isMoving: false };
+        return prev;
       });
 
       animationId = requestAnimationFrame(updateWanderingShip);
     };
 
-    // Inicializa com um alvo
-    const { targetX, targetY } = generateRandomTarget();
-    setWanderingShip((prev) => ({ ...prev, targetX, targetY }));
+    // Inicializa com uma rota
+    const route = generateNewRoute();
+    setWanderingShip((prev) => ({
+      ...prev,
+      ...route,
+      progress: 0,
+      behavior: "patrolling",
+      isMoving: true,
+    }));
 
     animationId = requestAnimationFrame(updateWanderingShip);
 
