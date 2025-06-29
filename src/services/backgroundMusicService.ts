@@ -154,22 +154,35 @@ class BackgroundMusicService {
    * Inicia a reprodução da trilha sonora
    */
   async play(): Promise<void> {
-    if (this.isPlaying && !this.isPaused) return;
+    console.log("🎵 Play chamado. Estado:", {
+      isPlaying: this.isPlaying,
+      isPaused: this.isPaused,
+      isUsingSynthetic: this.isUsingSynthetic,
+    });
+
+    if (this.isPlaying && !this.isPaused) {
+      console.log("⏸️ Já está tocando, ignorando");
+      return;
+    }
 
     try {
-      if (this.isPaused && this.currentTrack) {
+      if (this.isPaused && this.currentTrack && !this.isUsingSynthetic) {
         // Retoma da pausa
+        console.log("▶️ Retomando da pausa...");
         this.isPaused = false;
         await this.currentTrack.play();
         this.fadeIn(this.currentTrack);
       } else {
         // Inicia nova faixa
+        console.log("🎼 Iniciando nova faixa...");
         await this.playTrack(this.currentTrackIndex);
       }
 
       this.isPlaying = true;
+      console.log("✅ Música iniciada com sucesso");
     } catch (error) {
-      console.error("Erro ao iniciar música de fundo:", error);
+      console.error("❌ Erro ao iniciar música de fundo:", error);
+      throw error;
     }
   }
 
