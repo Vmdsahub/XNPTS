@@ -2542,8 +2542,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 className="w-full h-full object-contain drop-shadow-lg"
               />
 
-              {/* Trilha de propulsão - sempre ativa */}
-              {wanderingShip.isMoving && (
+              {/* Trilha de propulsão - apenas quando em movimento */}
+              {wanderingShip.isMoving && !wanderingShip.isPaused && (
                 <>
                   <motion.div
                     className="absolute w-0.5 h-6 bg-gradient-to-t from-transparent to-orange-400 transform -translate-x-1/2"
