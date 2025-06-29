@@ -389,6 +389,7 @@ class BackgroundMusicService {
       "para",
       newVolume,
     );
+    const oldVolume = this.volume;
     this.volume = Math.max(0, Math.min(1, newVolume));
 
     if (this.isUsingSynthetic && this.masterGainNode) {
@@ -397,7 +398,7 @@ class BackgroundMusicService {
         const ctx = this.syntheticAudioContext;
         if (ctx) {
           this.masterGainNode.gain.linearRampToValueAtTime(
-            this.volume * 0.2, // Volume base reduzido
+            this.volume * 0.2,
             ctx.currentTime + 0.1,
           );
           console.log("✅ Volume sintético ajustado para:", this.volume);
@@ -406,7 +407,22 @@ class BackgroundMusicService {
         console.warn("❌ Erro ao ajustar volume sintético:", error);
       }
     } else if (this.currentTrack) {
+      // Para arquivos reais, ajusta volume diretamente
       this.currentTrack.volume = this.volume;
+      console.log("✅ Volume real ajustado para:", this.volume);
+
+      // Se estava mutado e agora tem volume, despause
+      if (oldVolume === 0 && this.volume > 0 && this.isPaused) {
+        this.currentTrack
+          .play()
+          .catch((e) => console.warn("Erro ao despausar:", e));
+        this.isPaused = false;
+      }
+      // Se agora está mutado, pause
+      else if (this.volume === 0 && this.isPlaying && !this.isPaused) {
+        this.currentTrack.pause();
+        this.isPaused = true;
+      }
     }
   }
 
