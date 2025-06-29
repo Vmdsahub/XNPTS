@@ -142,16 +142,46 @@ const createMockClient = () => ({
                   table === "profiles"
                     ? [
                         {
-                          id: "mock-user-123",
-                          xenocoins: 0,
-                          cash: 0,
-                          username: "Demo User",
-                          account_score: 0,
+                          id: "world-1",
+                          name: "Nexus Prime",
+                          image_url:
+                            "https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2Fbd58c52f19d147f09ff36547a19e0305?format=webp&width=1600",
+                          x_position: 20,
+                          y_position: 30,
+                          scale: 1.0,
+                          order_index: 1,
+                          is_active: true,
+                          unlock_requirement: {},
                           created_at: new Date().toISOString(),
-                          last_login: new Date().toISOString(),
-                          is_admin: false,
-                          days_played: 1,
-                          total_xenocoins: 0,
+                          updated_at: new Date().toISOString(),
+                        },
+                        {
+                          id: "world-2",
+                          name: "Terra Nova",
+                          image_url:
+                            "https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2Fea3ec3d920794634bdf7d66a1159511b?format=webp&width=1600",
+                          x_position: 70,
+                          y_position: 20,
+                          scale: 1.0,
+                          order_index: 2,
+                          is_active: true,
+                          unlock_requirement: {},
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString(),
+                        },
+                        {
+                          id: "world-2",
+                          name: "Terra Nova",
+                          image_url:
+                            "https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2Fbd58c52f19d147f09ff36547a19e0305?format=webp&width=1600",
+                          x_position: 70,
+                          y_position: 20,
+                          scale: 1.0,
+                          order_index: 2,
+                          is_active: true,
+                          unlock_requirement: {},
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString(),
                         },
                       ]
                     : [],
@@ -197,7 +227,43 @@ const createMockClient = () => ({
             error: null,
           }),
         limit: (count: number) => Promise.resolve({ data: [], error: null }),
-        then: (callback: any) => callback({ data: [], error: null }),
+        then: (callback: any) =>
+          callback({
+            data:
+              table === "galaxy_worlds"
+                ? [
+                    {
+                      id: "world-1",
+                      name: "Nexus Prime",
+                      image_url:
+                        "https://cdn.builder.io/api/v1/image/assets%2F00527235c81749aeadef448eefcc705e%2Fa8f8439a99054a64b3fb9dd9c9f27e47?format=webp&width=200",
+                      x_position: 20,
+                      y_position: 30,
+                      scale: 1.0,
+                      order_index: 1,
+                      is_active: true,
+                      unlock_requirement: {},
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString(),
+                    },
+                    {
+                      id: "world-2",
+                      name: "Terra Nova",
+                      image_url:
+                        "https://cdn.builder.io/api/v1/image/assets%2F676198b3123e49d5b76d7e142e1266eb%2Fbd58c52f19d147f09ff36547a19e0305?format=webp&width=1600",
+                      x_position: 70,
+                      y_position: 20,
+                      scale: 1.0,
+                      order_index: 2,
+                      is_active: true,
+                      unlock_requirement: {},
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString(),
+                    },
+                  ]
+                : [],
+            error: null,
+          }),
       }),
       insert: (data: any) => ({
         select: (columns?: string) => ({
@@ -206,8 +272,10 @@ const createMockClient = () => ({
         }),
       }),
       update: (data: any) => ({
-        eq: (column: string, value: any) =>
-          Promise.resolve({ data: null, error: null }),
+        eq: (column: string, value: any) => {
+          console.log(`Mock update on ${table}:`, data);
+          return Promise.resolve({ data: null, error: null });
+        },
       }),
       delete: () => ({
         eq: (column: string, value: any) =>

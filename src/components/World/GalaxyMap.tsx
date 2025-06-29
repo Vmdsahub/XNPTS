@@ -19,12 +19,13 @@ import {
   stopEngineSound,
 } from "../../utils/soundManager";
 import { useAuthStore } from "../../store/authStore";
+import { gameService, GalaxyWorld } from "../../services/gameService";
 
 interface GalaxyMapProps {}
 
 // Sistema simples de pontos
 interface Point {
-  id: number;
+  id: string | number;
   x: number;
   y: number;
   label: string;
@@ -33,7 +34,18 @@ interface Point {
   scale?: number;
 }
 
-// 7 pontos distribuídos em círculo ao redor do centro
+// Converter GalaxyWorld para Point
+const galaxyWorldToPoint = (world: GalaxyWorld): Point => ({
+  id: world.id,
+  x: world.x,
+  y: world.y,
+  label: world.name,
+  image: world.imageUrl,
+  type: "world",
+  scale: world.scale,
+});
+
+// 7 pontos distribuídos em c��rculo ao redor do centro
 const createDefaultPoints = (): Point[] => {
   const centerX = 50;
   const centerY = 50;
@@ -105,7 +117,7 @@ const createDefaultPoints = (): Point[] => {
   return points;
 };
 
-// Configuração simplificada do mundo toroidal
+// Configura��ão simplificada do mundo toroidal
 const WORLD_CONFIG = {
   width: 200, // Tamanho do mundo em %
   height: 200,
@@ -126,30 +138,71 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   const { user } = useAuthStore();
   const isAdmin = user?.username === "Vitoca";
 
-  // Load points from localStorage or use defaults
-  const [points, setPoints] = useState<Point[]>(() => {
-    const saved = localStorage.getItem("xenopets-galaxy-points");
-    if (saved) {
-      try {
-        const savedPoints = JSON.parse(saved);
-        // Ensure all points have scale property
-        return savedPoints.map((point: Point) => ({
-          ...point,
-          scale: point.scale || 1,
-        }));
-      } catch (e) {
-        console.warn("Erro ao carregar pontos salvos:", e);
-      }
-    }
+  // Load points from database or use localStorage fallback
+  const [points, setPoints] = useState<Point[]>([]);
+  const [isLoadingWorlds, setIsLoadingWorlds] = useState(true);
 
-    // Força a recriação dos pontos com as novas imagens
-    const defaultPoints = createDefaultPoints();
-    localStorage.setItem(
-      "xenopets-galaxy-points",
-      JSON.stringify(defaultPoints),
-    );
-    return defaultPoints;
-  });
+  // Load galaxy worlds from database
+  useEffect(() => {
+    const loadGalaxyWorlds = async () => {
+      try {
+        setIsLoadingWorlds(true);
+        const worlds = await gameService.getGalaxyWorlds();
+
+        if (worlds.length > 0) {
+          // Use database data
+          const worldPoints = worlds.map(galaxyWorldToPoint);
+          setPoints(worldPoints);
+          console.log("🌌 Mundos carregados do banco:", worlds);
+        } else {
+          // Fallback to localStorage or create defaults
+          const saved = localStorage.getItem("xenopets-galaxy-points");
+          if (saved) {
+            try {
+              const savedPoints = JSON.parse(saved);
+              setPoints(
+                savedPoints.map((point: Point) => ({
+                  ...point,
+                  scale: point.scale || 1,
+                })),
+              );
+              console.log("💾 Usando dados do localStorage como fallback");
+            } catch (e) {
+              console.warn("Erro ao carregar pontos salvos:", e);
+              setPoints(createDefaultPoints());
+            }
+          } else {
+            const defaultPoints = createDefaultPoints();
+            setPoints(defaultPoints);
+            console.log("🎯 Usando pontos padrão");
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar mundos da galáxia:", error);
+        // Use localStorage fallback on error
+        const saved = localStorage.getItem("xenopets-galaxy-points");
+        if (saved) {
+          try {
+            const savedPoints = JSON.parse(saved);
+            setPoints(
+              savedPoints.map((point: Point) => ({
+                ...point,
+                scale: point.scale || 1,
+              })),
+            );
+          } catch (e) {
+            setPoints(createDefaultPoints());
+          }
+        } else {
+          setPoints(createDefaultPoints());
+        }
+      } finally {
+        setIsLoadingWorlds(false);
+      }
+    };
+
+    loadGalaxyWorlds();
+  }, []);
 
   const [shipPosition, setShipPosition] = useState(() => {
     const saved = localStorage.getItem("xenopets-player-data");
@@ -186,18 +239,23 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   const [wanderingShip, setWanderingShip] = useState({
     x: 50, // posição relativa na barreira
     y: 45,
-    targetX: 60,
-    targetY: 55,
-    controlX: 55, // ponto de controle para curva Bézier
-    controlY: 50,
+    velocityX: 0, // velocidade atual em X
+    velocityY: 0, // velocidade atual em Y
     rotation: 0,
-    targetRotation: 0,
-    isMoving: false,
+    baseSpeed: 0.015, // velocidade base muito baixa
+    maxSpeed: 0.03, // velocidade máxima
+    direction: Math.random() * Math.PI * 2, // direção atual em radianos
+    targetDirection: Math.random() * Math.PI * 2, // direção alvo
+    directionChangeTimer: 0,
+    nextDirectionChange: 300 + Math.random() * 600, // 5-15 segundos para próxima mudança
+    isMoving: true,
+    distanceToPlayer: 100,
+    // Sistema de pausas nos mundos
     isPaused: false,
     pauseTimer: 0,
-    speed: 0.015, // ainda mais lento
-    progress: 0, // progresso na curva atual (0-1)
-    behavior: "patrolling", // 'patrolling', 'paused', 'investigating'
+    nearestWorldDistance: 100,
+    hasRecentlyPaused: false,
+    pauseCooldown: 0,
   });
 
   const mapRef = useRef<HTMLDivElement>(null);
@@ -832,7 +890,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       );
 
       if (distance > 0) {
-        // Normaliza a direç��o e aplica força de repulsão
+        // Normaliza a direç���o e aplica força de repulsão
         const normalizedX = repelDirectionX / distance;
         const normalizedY = repelDirectionY / distance;
         const repelForce = 15; // For��a da repulsão
@@ -1642,10 +1700,10 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       lastMoveTime.current = currentTime;
     };
 
-    const handleGlobalMouseUp = () => {
+    const handleGlobalMouseUp = async () => {
       // Handle point resizing end
       if (isAdmin && resizingPoint !== null) {
-        savePoints(points);
+        await savePoints(points);
         setResizingPoint(null);
         setResizeStartScale(1);
         setResizeStartY(0);
@@ -1654,7 +1712,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
       // Handle point dragging end
       if (isAdmin && draggingPoint !== null) {
-        savePoints(points);
+        await savePoints(points);
         setDraggingPoint(null);
         setDragOffset({ x: 0, y: 0 });
         return;
@@ -1794,10 +1852,10 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       e.preventDefault();
     };
 
-    const handleGlobalTouchEnd = () => {
+    const handleGlobalTouchEnd = async () => {
       // Handle point resizing end
       if (isAdmin && resizingPoint !== null) {
-        savePoints(points);
+        await savePoints(points);
         setResizingPoint(null);
         setResizeStartScale(1);
         setResizeStartY(0);
@@ -1806,7 +1864,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
 
       // Handle point dragging end
       if (isAdmin && draggingPoint !== null) {
-        savePoints(points);
+        await savePoints(points);
         setDraggingPoint(null);
         setDragOffset({ x: 0, y: 0 });
         return;
@@ -1862,8 +1920,28 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     isAdmin,
   ]);
 
-  // Save points to localStorage
-  const savePoints = (newPoints: Point[]) => {
+  // Save points to database and localStorage as backup
+  const savePoints = async (newPoints: Point[]) => {
+    try {
+      // Update each world in the database if it has a string ID (from database)
+      const updatePromises = newPoints
+        .filter((point) => typeof point.id === "string")
+        .map((point) =>
+          gameService.updateGalaxyWorldPosition(
+            point.id as string,
+            point.x,
+            point.y,
+            point.scale || 1,
+          ),
+        );
+
+      await Promise.all(updatePromises);
+      console.log("✅ Posições salvas no banco de dados");
+    } catch (error) {
+      console.error("❌ Erro ao salvar no banco:", error);
+    }
+
+    // Always save to localStorage as backup
     localStorage.setItem("xenopets-galaxy-points", JSON.stringify(newPoints));
     setPoints(newPoints);
   };
@@ -1872,155 +1950,176 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
   useEffect(() => {
     let animationId: number;
 
-    const generateNewRoute = () => {
-      // Gera um ponto aleatório dentro da barreira circular
-      const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * 25 + 15; // Entre 15% e 40% do raio
-
-      const targetX = 50 + Math.cos(angle) * radius;
-      const targetY = 50 + Math.sin(angle) * radius;
-
-      // Gera ponto de controle para curva Bézier (offset perpendicular)
-      const controlAngle = angle + (Math.random() - 0.5) * Math.PI * 0.6; // Variação de até 54°
-      const controlRadius = radius * (0.3 + Math.random() * 0.4); // 30-70% da distância
-      const controlX = 50 + Math.cos(controlAngle) * controlRadius;
-      const controlY = 50 + Math.sin(controlAngle) * controlRadius;
-
-      return { targetX, targetY, controlX, controlY };
-    };
-
-    // Função de interpolação de curva Bézier quadrática
-    const bezierInterpolate = (start, control, end, t) => {
-      const oneMinusT = 1 - t;
-      return (
-        oneMinusT * oneMinusT * start +
-        2 * oneMinusT * t * control +
-        t * t * end
-      );
+    // Função auxiliar para normalizar ângulos
+    const normalizeAngle = (angle) => {
+      while (angle < 0) angle += Math.PI * 2;
+      while (angle >= Math.PI * 2) angle -= Math.PI * 2;
+      return angle;
     };
 
     const updateWanderingShip = () => {
       setWanderingShip((prev) => {
-        // Sistema de comportamentos
-        if (prev.behavior === "paused") {
-          if (prev.pauseTimer > 0) {
-            return {
-              ...prev,
-              pauseTimer: prev.pauseTimer - 1,
-              isMoving: false,
-              isPaused: true,
-            };
+        // Calcula distância do jogador (centro do mapa) para a nave
+        const centerX = 50;
+        const centerY = 50;
+        const dx = prev.x - centerX;
+        const dy = prev.y - centerY;
+        const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
+
+        // Debug da posição (apenas ocasionalmente para não spam)
+        if (Math.random() < 0.01) {
+          console.log(
+            `📍 Nave em: (${prev.x.toFixed(1)}, ${prev.y.toFixed(1)}), Jogador: (${centerX}, ${centerY}), Distância: ${distanceToPlayer.toFixed(2)}`,
+          );
+        }
+
+        // Calcula distância para o mundo mais próximo
+        let nearestWorldDistance = 100;
+        if (points && points.length > 0) {
+          nearestWorldDistance = Math.min(
+            ...points.map((point) => {
+              const worldDx = prev.x - point.x;
+              const worldDy = prev.y - point.y;
+              return Math.sqrt(worldDx * worldDx + worldDy * worldDy);
+            }),
+          );
+        }
+
+        // Sistema de pausas perto dos mundos
+        let isPaused = prev.isPaused;
+        let pauseTimer = prev.pauseTimer;
+        let hasRecentlyPaused = prev.hasRecentlyPaused;
+        let pauseCooldown = Math.max(0, prev.pauseCooldown - 1);
+
+        // Se está pausado, diminui o timer
+        if (isPaused) {
+          pauseTimer--;
+          if (pauseTimer <= 0) {
+            isPaused = false;
+            hasRecentlyPaused = true;
+            pauseCooldown = 600; // 10 segundos de cooldown
+          }
+        } else if (
+          nearestWorldDistance < 8 &&
+          !hasRecentlyPaused &&
+          pauseCooldown <= 0
+        ) {
+          // Pausa perto de um mundo
+          isPaused = true;
+          pauseTimer = 180 + Math.random() * 240; // 3-7 segundos de pausa
+        }
+
+        // Se está pausado, não move
+        if (isPaused) {
+          return {
+            ...prev,
+            isPaused,
+            pauseTimer,
+            hasRecentlyPaused,
+            pauseCooldown,
+            distanceToPlayer,
+            nearestWorldDistance,
+            isMoving: false,
+          };
+        }
+
+        // Reset flag se está longe dos mundos
+        if (nearestWorldDistance > 15) {
+          hasRecentlyPaused = false;
+        }
+
+        // Sistema de mudança suave de direção
+        let newDirection = prev.direction;
+        let newTargetDirection = prev.targetDirection;
+        let newDirectionChangeTimer = prev.directionChangeTimer + 1;
+        let newNextDirectionChange = prev.nextDirectionChange;
+
+        // Hora de mudar direção?
+        if (newDirectionChangeTimer >= newNextDirectionChange) {
+          newTargetDirection = Math.random() * Math.PI * 2;
+          newDirectionChangeTimer = 0;
+          newNextDirectionChange = 300 + Math.random() * 600; // 5-15 segundos
+        }
+
+        // Interpola suavemente para a nova direção
+        let directionDiff = newTargetDirection - newDirection;
+        if (directionDiff > Math.PI) directionDiff -= Math.PI * 2;
+        if (directionDiff < -Math.PI) directionDiff += Math.PI * 2;
+        newDirection += directionDiff * 0.01; // Interpolação muito suave
+
+        // Velocidade variável baseada em ondas suaves
+        const time = Date.now() * 0.001;
+        const speedMultiplier =
+          0.7 + 0.6 * Math.sin(time * 0.5) * Math.sin(time * 0.3);
+        const currentSpeed = prev.baseSpeed * speedMultiplier;
+
+        // Calcula nova velocidade baseada na direção
+        const newVelocityX = Math.cos(newDirection) * currentSpeed;
+        const newVelocityY = Math.sin(newDirection) * currentSpeed;
+
+        // Aplica movimento suave com interpolação
+        const newX = prev.x + newVelocityX;
+        const newY = prev.y + newVelocityY;
+
+        // Verifica limites da barreira circular (raio máximo de ~35%)
+        const distanceFromCenter = Math.sqrt(
+          (newX - 50) * (newX - 50) + (newY - 50) * (newY - 50),
+        );
+        let finalX = newX;
+        let finalY = newY;
+        let bounceDirection = newDirection;
+
+        if (distanceFromCenter > 35) {
+          // Reflexão suave sem teleporte - só muda direção
+          const angleToCenter = Math.atan2(50 - prev.y, 50 - prev.x);
+          bounceDirection =
+            angleToCenter + Math.PI + (Math.random() - 0.5) * 0.8;
+
+          // Mantém posição atual (não teleporta) e só ajusta se necessário
+          if (distanceFromCenter > 36) {
+            // Só reposiciona se realmente saiu muito do limite
+            finalX = 50 + Math.cos(angleToCenter) * 35;
+            finalY = 50 + Math.sin(angleToCenter) * 35;
           } else {
-            // Acabou a pausa, volta a patrulhar
-            const route = generateNewRoute();
-            return {
-              ...prev,
-              ...route,
-              behavior: "patrolling",
-              progress: 0,
-              isPaused: false,
-            };
+            // Usa posição anterior para evitar teleporte
+            finalX = prev.x;
+            finalY = prev.y;
           }
         }
 
-        // Sistema de movimento com curva Bézier
-        if (prev.behavior === "patrolling") {
-          // Incrementa progresso na curva
-          const newProgress = prev.progress + prev.speed;
+        // Calcula rotação baseada na direção do movimento
+        const newRotation = (newDirection * 180) / Math.PI + 90;
 
-          if (newProgress >= 1) {
-            // Chegou ao destino - decide próxima ação
-            const rand = Math.random();
-            if (rand < 0.3) {
-              // 30% chance de pausar
-              return {
-                ...prev,
-                behavior: "paused",
-                pauseTimer: 60 + Math.random() * 120, // 1-3 segundos a 60fps
-                isMoving: false,
-                isPaused: true,
-                progress: 0,
-              };
-            } else {
-              // 70% chance de continuar patrulhando
-              const route = generateNewRoute();
-              return {
-                ...prev,
-                ...route,
-                progress: 0,
-                isMoving: true,
-              };
-            }
-          }
-
-          // Calcula posição na curva Bézier
-          const newX = bezierInterpolate(
-            prev.x,
-            prev.controlX,
-            prev.targetX,
-            newProgress,
-          );
-          const newY = bezierInterpolate(
-            prev.y,
-            prev.controlY,
-            prev.targetY,
-            newProgress,
-          );
-
-          // Calcula direção do movimento para rotação suave
-          const futureProgress = Math.min(newProgress + 0.05, 1);
-          const futureX = bezierInterpolate(
-            prev.x,
-            prev.controlX,
-            prev.targetX,
-            futureProgress,
-          );
-          const futureY = bezierInterpolate(
-            prev.y,
-            prev.controlY,
-            prev.targetY,
-            futureProgress,
-          );
-
-          const dx = futureX - newX;
-          const dy = futureY - newY;
-
-          if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
-            const targetRotation = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
-
-            // Interpolação suave da rotação
-            let rotationDiff = targetRotation - prev.rotation;
-            if (rotationDiff > 180) rotationDiff -= 360;
-            if (rotationDiff < -180) rotationDiff += 360;
-
-            const newRotation = prev.rotation + rotationDiff * 0.08; // Rotação mais responsiva
-
-            return {
-              ...prev,
-              x: newX,
-              y: newY,
-              rotation: newRotation,
-              progress: newProgress,
-              isMoving: true,
-              isPaused: false,
-            };
-          }
-        }
-
-        return prev;
+        return {
+          ...prev,
+          x: finalX,
+          y: finalY,
+          velocityX: newVelocityX,
+          velocityY: newVelocityY,
+          direction: distanceFromCenter > 35 ? bounceDirection : newDirection,
+          targetDirection: newTargetDirection,
+          directionChangeTimer: newDirectionChangeTimer,
+          nextDirectionChange: newNextDirectionChange,
+          rotation: newRotation,
+          isMoving: true,
+          isPaused: false,
+          pauseTimer: 0,
+          hasRecentlyPaused,
+          pauseCooldown,
+          distanceToPlayer,
+          nearestWorldDistance,
+        };
       });
 
       animationId = requestAnimationFrame(updateWanderingShip);
     };
 
-    // Inicializa com uma rota
-    const route = generateNewRoute();
+    // Inicializa movimento suave da nave
     setWanderingShip((prev) => ({
       ...prev,
-      ...route,
-      progress: 0,
-      behavior: "patrolling",
       isMoving: true,
+      direction: Math.random() * Math.PI * 2,
+      targetDirection: Math.random() * Math.PI * 2,
     }));
 
     animationId = requestAnimationFrame(updateWanderingShip);
@@ -2032,14 +2131,136 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     };
   }, []);
 
-  // Sistema de som para nave mercante
+  // Sistema de som para nave mercante baseado na proximidade
+  const [merchantEngineSound, setMerchantEngineSound] = useState<{
+    stop: () => void;
+    setVolume: (vol: number) => void;
+  } | null>(null);
+
   useEffect(() => {
-    if (wanderingShip.isMoving && !wanderingShip.isPaused) {
-      startEngineSound();
+    const distance = wanderingShip.distanceToPlayer;
+    const maxDistance = 20; // Distância máxima reduzida para ouvir som
+    const shouldPlaySound =
+      wanderingShip.isMoving &&
+      !wanderingShip.isPaused &&
+      distance < maxDistance;
+
+    console.log(
+      `🔊 Som da nave: distância=${distance.toFixed(2)}, deveria tocar=${shouldPlaySound}`,
+    );
+
+    if (shouldPlaySound) {
+      // Calcula volume baseado na distância com curva mais suave
+      const normalizedDistance = Math.max(
+        0,
+        Math.min(1, distance / maxDistance),
+      );
+      const volume = (1 - normalizedDistance) * 0.25; // Volume máximo 0.25
+
+      if (!merchantEngineSound) {
+        // Cria um som de motor diferente para a nave mercante
+        try {
+          const audioContext = new (window.AudioContext ||
+            (window as any).webkitAudioContext)();
+          const startTime = audioContext.currentTime;
+
+          const osc1 = audioContext.createOscillator();
+          const osc2 = audioContext.createOscillator();
+          const gain1 = audioContext.createGain();
+          const gain2 = audioContext.createGain();
+          const masterGain = audioContext.createGain();
+
+          osc1.connect(gain1);
+          osc2.connect(gain2);
+          gain1.connect(masterGain);
+          gain2.connect(masterGain);
+          masterGain.connect(audioContext.destination);
+
+          // Som diferenciado para nave mercante - mais grave
+          osc1.type = "triangle";
+          osc2.type = "sine";
+
+          osc1.frequency.setValueAtTime(70, startTime); // Mais grave
+          osc2.frequency.setValueAtTime(140, startTime); // Harmônico
+
+          // Volumes iniciais baseados na distância
+          gain1.gain.setValueAtTime(volume * 0.6, startTime);
+          gain2.gain.setValueAtTime(volume * 0.4, startTime);
+
+          // Fade-in suave
+          masterGain.gain.setValueAtTime(0, startTime);
+          masterGain.gain.linearRampToValueAtTime(1, startTime + 0.3);
+
+          osc1.start(startTime);
+          osc2.start(startTime);
+
+          const soundControl = {
+            stop: () => {
+              try {
+                const stopTime = audioContext.currentTime;
+                masterGain.gain.linearRampToValueAtTime(0, stopTime + 0.3);
+                setTimeout(() => {
+                  try {
+                    osc1.stop();
+                    osc2.stop();
+                    audioContext.close();
+                  } catch (e) {
+                    // Ignora erros de stop
+                  }
+                }, 350);
+              } catch (e) {
+                console.warn("Error stopping merchant sound:", e);
+              }
+            },
+            setVolume: (vol: number) => {
+              try {
+                const currentTime = audioContext.currentTime;
+                gain1.gain.linearRampToValueAtTime(
+                  vol * 0.6,
+                  currentTime + 0.1,
+                );
+                gain2.gain.linearRampToValueAtTime(
+                  vol * 0.4,
+                  currentTime + 0.1,
+                );
+              } catch (e) {
+                console.warn("Error setting volume:", e);
+              }
+            },
+          };
+
+          setMerchantEngineSound(soundControl);
+          console.log(`🎵 Som da nave criado com volume: ${volume.toFixed(3)}`);
+        } catch (e) {
+          console.warn("Merchant engine sound creation failed:", e);
+        }
+      } else {
+        // Atualiza volume do som existente com suavidade
+        merchantEngineSound.setVolume(volume);
+        console.log(`🔊 Volume atualizado: ${volume.toFixed(3)}`);
+      }
     } else {
-      stopEngineSound();
+      // Para o som se existir
+      if (merchantEngineSound) {
+        console.log("🔇 Parando som da nave");
+        merchantEngineSound.stop();
+        setMerchantEngineSound(null);
+      }
     }
-  }, [wanderingShip.isMoving, wanderingShip.isPaused]);
+  }, [
+    wanderingShip.isMoving,
+    wanderingShip.isPaused,
+    wanderingShip.distanceToPlayer,
+  ]);
+
+  // Cleanup do som da nave mercante quando componente desmonta
+  useEffect(() => {
+    return () => {
+      if (merchantEngineSound) {
+        merchantEngineSound.stop();
+      }
+    };
+  }, []);
 
   const handlePointClick = (point: Point) => {
     if (!isAdmin || draggingPoint !== null) return;
@@ -2120,11 +2341,11 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     setPoints(newPoints);
   };
 
-  const handlePointMouseUp = () => {
+  const handlePointMouseUp = async () => {
     if (!isAdmin || draggingPoint === null) return;
 
     // Save final position
-    savePoints(points);
+    await savePoints(points);
     setDraggingPoint(null);
     setDragOffset({ x: 0, y: 0 });
   };
@@ -2325,42 +2546,26 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               className="relative w-10 h-10"
               style={{ rotate: wanderingShip.rotation }}
               animate={{
-                scale: wanderingShip.isMoving
-                  ? 1.05
-                  : wanderingShip.isPaused
-                    ? 0.95
-                    : 1,
-                // Vibração quando se movendo, pulsação quando pausado, flutuação quando normal
-                y: wanderingShip.isMoving
+                scale: wanderingShip.isPaused ? 0.95 : 1.02,
+                // Movimento diferente quando pausado
+                y: wanderingShip.isPaused
                   ? [0, -0.5, 0, 0.5, 0]
-                  : wanderingShip.isPaused
-                    ? [0, -1, 0, 1, 0]
-                    : [0, -2, 0, 2, 0],
-                x: wanderingShip.isMoving
-                  ? [0, 0.5, 0, -0.5, 0]
-                  : wanderingShip.isPaused
-                    ? [0, 0.5, 0, -0.5, 0]
-                    : [0, 1.5, 0, -1.5, 0],
+                  : [0, -1, 0, 1, 0],
+                x: wanderingShip.isPaused
+                  ? [0, 0.2, 0, -0.2, 0]
+                  : [0, 0.5, 0, -0.5, 0],
               }}
               transition={{
-                scale: { type: "spring", stiffness: 300, damping: 30 },
+                scale: { duration: 0.5 },
                 y: {
-                  duration: wanderingShip.isMoving
-                    ? 0.15
-                    : wanderingShip.isPaused
-                      ? 1.5
-                      : 2.2,
+                  duration: wanderingShip.isPaused ? 1.5 : 3,
                   repeat: Infinity,
-                  ease: wanderingShip.isMoving ? "linear" : "easeInOut",
+                  ease: "easeInOut",
                 },
                 x: {
-                  duration: wanderingShip.isMoving
-                    ? 0.12
-                    : wanderingShip.isPaused
-                      ? 1.8
-                      : 2.8,
+                  duration: wanderingShip.isPaused ? 1.2 : 2.5,
                   repeat: Infinity,
-                  ease: wanderingShip.isMoving ? "linear" : "easeInOut",
+                  ease: "easeInOut",
                 },
               }}
             >
@@ -2371,7 +2576,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 className="w-full h-full object-contain drop-shadow-lg"
               />
 
-              {/* Trilha de propulsão - apenas quando realmente se movendo (não pausado) */}
+              {/* Trilha de propulsão - apenas quando em movimento */}
               {wanderingShip.isMoving && !wanderingShip.isPaused && (
                 <>
                   <motion.div
@@ -2414,123 +2619,136 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             </motion.div>
           </motion.div>
         </div>
-        {/* Novos pontos clicáveis */}
-        {points.map((point) => (
-          <motion.div
-            key={point.id}
-            className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${
-              isAdmin
-                ? "cursor-grab hover:cursor-grab active:cursor-grabbing"
-                : "cursor-pointer"
-            } ${draggingPoint === point.id ? "z-50" : "z-30"}`}
-            style={{
-              left: `${point.x}%`,
-              top: `${point.y}%`,
-              pointerEvents: "auto",
-            }}
-            onClick={() => handlePointClick(point)}
-            onMouseDown={(e) => handlePointMouseDown(e, point)}
-            onTouchStart={(e) => handlePointTouchStart(e, point)}
-            animate={{
-              y: [0, -5 - point.id * 0.8, 0, 3.5 + point.id * 0.5, 0],
-              x: [0, 2 + point.id * 0.4, 0, -2.5 - point.id * 0.3, 0],
-              rotate: [0, 1 + point.id * 0.15, 0, -1.3 - point.id * 0.1, 0],
-            }}
-            transition={{
-              y: {
-                duration: 6 + point.id * 0.8,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: point.id * 1,
-              },
-              x: {
-                duration: 7 + point.id * 1,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: point.id * 1.3,
-              },
-              rotate: {
-                duration: 9 + point.id * 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: point.id * 1.8,
-              },
-            }}
-          >
-            <div className="relative group">
-              {/* Imagem do planeta/estação */}
-              <div
-                className={`w-48 h-48 transition-all duration-300 relative ${
-                  draggingPoint === point.id
-                    ? "scale-110 brightness-110"
-                    : resizingPoint === point.id
-                      ? "brightness-125"
-                      : "hover:scale-105 hover:brightness-110"
-                }`}
-                style={{
-                  transform: `scale(${point.scale || 1})`,
-                  filter:
-                    draggingPoint === point.id
-                      ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
-                      : resizingPoint === point.id
-                        ? "drop-shadow(0 0 25px rgba(0, 255, 255, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
-                        : "drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1))",
-                }}
-              >
-                <img
-                  src={point.image}
-                  alt={point.label}
-                  className="w-full h-full object-contain"
-                  crossOrigin="anonymous"
-                  loading="eager"
-                  onLoad={(e) => {
-                    console.log(`✅ Imagem carregada: ${point.label}`);
-                  }}
-                  onError={(e) => {
-                    console.error(
-                      `❌ Erro ao carregar imagem: ${point.label}`,
-                      point.image,
-                    );
-                  }}
-                />
-
-                {/* Brilho de seleção para admin */}
-                {draggingPoint === point.id && (
-                  <div className="absolute inset-0 rounded-lg bg-yellow-400/30 animate-pulse"></div>
-                )}
-              </div>
-
-              {/* Admin indicator */}
-              {isAdmin && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-white opacity-80 shadow-lg">
-                  <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
-                </div>
-              )}
-
-              {/* Tooltip melhorado */}
-              <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 bg-gradient-to-br from-gray-900 to-black text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-gray-600 shadow-xl">
-                <div className="font-bold text-cyan-300">{point.label}</div>
-                <div className="text-gray-300 text-xs capitalize">
-                  {point.type}
-                </div>
-                {point.scale && point.scale !== 1 && (
-                  <div className="text-blue-300 text-xs">
-                    Escala: {point.scale.toFixed(1)}x
-                  </div>
-                )}
-                {isAdmin && (
-                  <div className="text-yellow-400 text-xs mt-1">
-                    <div>⚡ Arraste para mover</div>
-                    <div>🔧 Ctrl+Arraste para redimensionar</div>
-                  </div>
-                )}
-
-                {/* Tooltip arrow */}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-              </div>
+        {/* Loading indicator for worlds */}
+        {isLoadingWorlds && (
+          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-2"></div>
+              <p className="text-gray-300 text-sm">Carregando mundos...</p>
             </div>
-          </motion.div>
-        ))}
+          </div>
+        )}
+
+        {/* Novos pontos clicáveis */}
+        {!isLoadingWorlds &&
+          points.map((point) => (
+            <motion.div
+              key={point.id}
+              className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${
+                isAdmin
+                  ? "cursor-grab hover:cursor-grab active:cursor-grabbing"
+                  : "cursor-pointer"
+              } ${draggingPoint === point.id ? "z-50" : "z-30"}`}
+              style={{
+                left: `${point.x}%`,
+                top: `${point.y}%`,
+                pointerEvents: "auto",
+              }}
+              onClick={() => handlePointClick(point)}
+              onMouseDown={(e) => handlePointMouseDown(e, point)}
+              onTouchStart={(e) => handlePointTouchStart(e, point)}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.95 }}
+              animate={{
+                y: [0, -5 - point.id * 0.8, 0, 3.5 + point.id * 0.5, 0],
+                x: [0, 2 + point.id * 0.4, 0, -2.5 - point.id * 0.3, 0],
+                rotate: [0, 1 + point.id * 0.15, 0, -1.3 - point.id * 0.1, 0],
+              }}
+              transition={{
+                y: {
+                  duration: 6 + point.id * 0.8,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: point.id * 1,
+                },
+                x: {
+                  duration: 7 + point.id * 1,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: point.id * 1.3,
+                },
+                rotate: {
+                  duration: 9 + point.id * 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: point.id * 1.8,
+                },
+              }}
+            >
+              <div className="relative group">
+                {/* Imagem do planeta/estação */}
+                <div
+                  className={`w-48 h-48 transition-all duration-300 relative ${
+                    draggingPoint === point.id
+                      ? "scale-110 brightness-110"
+                      : resizingPoint === point.id
+                        ? "brightness-125"
+                        : "hover:scale-105 hover:brightness-110"
+                  }`}
+                  style={{
+                    transform: `scale(${point.scale || 1})`,
+                    filter:
+                      draggingPoint === point.id
+                        ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
+                        : resizingPoint === point.id
+                          ? "drop-shadow(0 0 25px rgba(0, 255, 255, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
+                          : "drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1))",
+                  }}
+                >
+                  <img
+                    src={point.image}
+                    alt={point.label}
+                    className="w-full h-full object-contain"
+                    crossOrigin="anonymous"
+                    loading="eager"
+                    onLoad={(e) => {
+                      console.log(`✅ Imagem carregada: ${point.label}`);
+                    }}
+                    onError={(e) => {
+                      console.error(
+                        `❌ Erro ao carregar imagem: ${point.label}`,
+                        point.image,
+                      );
+                    }}
+                  />
+
+                  {/* Brilho de seleção para admin */}
+                  {draggingPoint === point.id && (
+                    <div className="absolute inset-0 rounded-lg bg-yellow-400/30 animate-pulse"></div>
+                  )}
+                </div>
+
+                {/* Admin indicator */}
+                {isAdmin && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-white opacity-80 shadow-lg">
+                    <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
+                  </div>
+                )}
+
+                {/* Tooltip melhorado */}
+                <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 bg-gradient-to-br from-gray-900 to-black text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-gray-600 shadow-xl">
+                  <div className="font-bold text-cyan-300">{point.label}</div>
+                  <div className="text-gray-300 text-xs capitalize">
+                    {point.type}
+                  </div>
+                  {point.scale && point.scale !== 1 && (
+                    <div className="text-blue-300 text-xs">
+                      Escala: {point.scale.toFixed(1)}x
+                    </div>
+                  )}
+                  {isAdmin && (
+                    <div className="text-yellow-400 text-xs mt-1">
+                      <div>⚡ Arraste para mover</div>
+                      <div>🔧 Ctrl+Arraste para redimensionar</div>
+                    </div>
+                  )}
+
+                  {/* Tooltip arrow */}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
       </motion.div>
 
       {/* Nave do jogador - fixa no centro */}
