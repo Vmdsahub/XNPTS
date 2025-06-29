@@ -104,31 +104,47 @@ export const MapPoint: React.FC<MapPointProps> = ({
       animate={{
         opacity: 1,
         scale: 1,
+        y: [0, -8 - randomSeed * 4, 0, 6 + randomSeed * 3, 0],
+        x: [0, 2 + randomSeed * 3, 0, -3 - randomSeed * 2, 0],
+        rotate: [0, 1 + randomSeed * 2, 0, -2 - randomSeed, 0],
         filter: isNearby
           ? `drop-shadow(0 0 12px ${colors.glow})`
           : `drop-shadow(0 0 6px ${colors.glow})`,
       }}
       transition={{
-        type: "spring",
-        stiffness: 300,
-        damping: 30,
-        delay: randomSeed * 0.5,
-      }}
-    >
-      {/* Floating animation wrapper */}
-      <motion.div
-        animate={{
-          y: [0, -8, 0, 6, 0],
-          x: [0, 2, 0, -3, 0],
-          rotate: [0, 1, 0, -2, 0],
-        }}
-        transition={{
+        opacity: {
+          type: "spring",
+          stiffness: 300,
+          damping: 30,
+          delay: randomSeed * 0.5,
+        },
+        scale: {
+          type: "spring",
+          stiffness: 300,
+          damping: 30,
+          delay: randomSeed * 0.5,
+        },
+        y: {
           duration: 4 + randomSeed * 3,
           repeat: Infinity,
           ease: "easeInOut",
           delay: randomSeed * 2,
-        }}
-      >
+        },
+        x: {
+          duration: 5 + randomSeed * 2,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: randomSeed * 1.5,
+        },
+        rotate: {
+          duration: 6 + randomSeed * 4,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: randomSeed * 2.5,
+        },
+        filter: { duration: 0.3 },
+      }}
+    >
       {/* Outer pulse ring for nearby state */}
       {isNearby && (
         <motion.div
