@@ -33,6 +33,7 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
 
   const handleVolumeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
+    console.log("🎛️ VolumeControl: Slider mudou para:", newVolume);
     setVolume(newVolume);
 
     // Se estiver aumentando volume e música não estiver tocando, tenta iniciar
