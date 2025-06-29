@@ -471,6 +471,7 @@ class BackgroundMusicService {
       }
     });
     this.currentOscillators = [];
+    this.currentGainNodes = [];
   }
 
   /**
