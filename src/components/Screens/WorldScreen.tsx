@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { GalaxyMap } from "../World/GalaxyMap";
+import { VolumeControl } from "../Audio/VolumeControl";
 
 export const WorldScreen: React.FC = () => {
   return (
