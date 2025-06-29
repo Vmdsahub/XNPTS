@@ -67,9 +67,21 @@ class BackgroundMusicService {
         this.preloadTrack(track.path),
       );
       await Promise.all(loadPromises);
-      console.log("Todas as faixas de música galáctica foram pré-carregadas");
+
+      // Se nenhuma faixa foi carregada, usa música sintética
+      if (this.tracks.length === 0) {
+        console.log(
+          "Nenhum arquivo de música encontrado, usando música sintética",
+        );
+        this.setupSyntheticMusic();
+      } else {
+        console.log(
+          `${this.tracks.length} faixas de música galáctica carregadas`,
+        );
+      }
     } catch (error) {
-      console.warn("Algumas faixas podem não ter carregado:", error);
+      console.warn("Erro ao carregar faixas, usando música sintética:", error);
+      this.setupSyntheticMusic();
     }
   }
 
