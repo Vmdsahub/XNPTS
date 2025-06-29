@@ -115,6 +115,20 @@ export const MapPoint: React.FC<MapPointProps> = ({
         delay: randomSeed * 0.5,
       }}
     >
+      {/* Floating animation wrapper */}
+      <motion.div
+        animate={{
+          y: [0, -8, 0, 6, 0],
+          x: [0, 2, 0, -3, 0],
+          rotate: [0, 1, 0, -2, 0],
+        }}
+        transition={{
+          duration: 4 + randomSeed * 3,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: randomSeed * 2,
+        }}
+      >
       {/* Outer pulse ring for nearby state */}
       {isNearby && (
         <motion.div
