@@ -383,37 +383,39 @@ class BackgroundMusicService {
   }
 
   private createMelodyLine(ctx: AudioContext, config: any): void {
-    let time = ctx.currentTime + 2;
+    // Toca melodia repetidas vezes durante a faixa
+    for (let cycle = 0; cycle < 8; cycle++) {
+      let time = ctx.currentTime + 2 + cycle * 20; // Novo ciclo a cada 20 segundos
 
-    // Toca melodia com ritmo
-    config.melody.forEach((freq: number, i: number) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
+      config.melody.forEach((freq: number, i: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
 
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(freq, time);
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, time);
 
-      filter.type = "lowpass";
-      filter.frequency.setValueAtTime(freq * 4, time);
-      filter.Q.setValueAtTime(1, time);
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(freq * 4, time);
+        filter.Q.setValueAtTime(1, time);
 
-      const noteLength = config.rhythm[i % config.rhythm.length];
-      const volume = this.volume * 0.08;
+        const noteLength = config.rhythm[i % config.rhythm.length];
+        const volume = this.volume * 0.08;
 
-      gain.gain.setValueAtTime(0, time);
-      gain.gain.linearRampToValueAtTime(volume, time + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + noteLength);
+        gain.gain.setValueAtTime(0, time);
+        gain.gain.linearRampToValueAtTime(volume, time + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + noteLength);
 
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
 
-      osc.start(time);
-      osc.stop(time + noteLength);
+        osc.start(time);
+        osc.stop(time + noteLength);
 
-      time += noteLength + 0.5; // Pausa entre notas
-    });
+        time += noteLength + 0.5; // Pausa entre notas
+      });
+    }
   }
 
   private createChordPad(ctx: AudioContext, config: any): void {
