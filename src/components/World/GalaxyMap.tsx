@@ -2065,7 +2065,8 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         if (distanceFromCenter > 35) {
           // Reflexão suave sem teleporte - só muda direção
           const angleToCenter = Math.atan2(50 - prev.y, 50 - prev.x);
-          bounceDirection = angleToCenter + Math.PI + (Math.random() - 0.5) * 0.8;
+          bounceDirection =
+            angleToCenter + Math.PI + (Math.random() - 0.5) * 0.8;
 
           // Mantém posição atual (não teleporta) e só ajusta se necessário
           if (distanceFromCenter > 36) {
@@ -2137,11 +2138,16 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       !wanderingShip.isPaused &&
       distance < maxDistance;
 
-    console.log(`🔊 Som da nave: distância=${distance.toFixed(2)}, deveria tocar=${shouldPlaySound}`);
+    console.log(
+      `🔊 Som da nave: distância=${distance.toFixed(2)}, deveria tocar=${shouldPlaySound}`,
+    );
 
     if (shouldPlaySound) {
       // Calcula volume baseado na distância com curva mais suave
-      const normalizedDistance = Math.max(0, Math.min(1, distance / maxDistance));
+      const normalizedDistance = Math.max(
+        0,
+        Math.min(1, distance / maxDistance),
+      );
       const volume = (1 - normalizedDistance) * 0.25; // Volume máximo 0.25
 
       if (!merchantEngineSound) {
@@ -2202,8 +2208,14 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             setVolume: (vol: number) => {
               try {
                 const currentTime = audioContext.currentTime;
-                gain1.gain.linearRampToValueAtTime(vol * 0.6, currentTime + 0.1);
-                gain2.gain.linearRampToValueAtTime(vol * 0.4, currentTime + 0.1);
+                gain1.gain.linearRampToValueAtTime(
+                  vol * 0.6,
+                  currentTime + 0.1,
+                );
+                gain2.gain.linearRampToValueAtTime(
+                  vol * 0.4,
+                  currentTime + 0.1,
+                );
               } catch (e) {
                 console.warn("Error setting volume:", e);
               }
@@ -2228,8 +2240,10 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         setMerchantEngineSound(null);
       }
     }
-  }, [wanderingShip.isMoving, wanderingShip.isPaused, wanderingShip.distanceToPlayer]);
-    merchantEngineSound,
+  }, [
+    wanderingShip.isMoving,
+    wanderingShip.isPaused,
+    wanderingShip.distanceToPlayer,
   ]);
 
   // Cleanup do som da nave mercante quando componente desmonta
