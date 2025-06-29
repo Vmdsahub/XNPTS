@@ -21,7 +21,6 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import { gameService, GalaxyWorld } from "../../services/gameService";
 import { useBackgroundMusic } from "../../hooks/useBackgroundMusic";
-import { MusicControls } from "../Audio/MusicControls";
 
 interface GalaxyMapProps {}
 
@@ -726,7 +725,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
               const opacityHash = hash(worldX * 1.7, worldY * 1.9, layer);
               const colorHash = hash(worldX * 2.1, worldY * 2.3, layer);
 
-              // Hash para animações ��nicas de cada estrela
+              // Hash para animações únicas de cada estrela
               const animationSeed = hash(worldX * 3.7, worldY * 4.1, layer);
               const animationSeed2 = hash(worldX * 5.3, worldY * 6.7, layer);
 
