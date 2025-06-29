@@ -546,7 +546,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       "#FB7185",
     ];
 
-    // Fun����o hash robusta
+    // Fun��ão hash robusta
     const hash = (x: number, y: number, layer: number) => {
       let h = 1779033703 ^ layer;
       h = Math.imul(h ^ Math.floor(x), 3432918353);
@@ -1870,7 +1870,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 {isAdmin && (
                   <div className="text-yellow-400 text-xs mt-1">
                     <div>⚡ Arraste para mover</div>
-                    <div>🔧 Shift+Arraste para redimensionar</div>
+                    <div>🔧 Ctrl+Arraste para redimensionar</div>
                   </div>
                 )}
 
