@@ -2144,7 +2144,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       }
     }
   }, [
-    wanderingShip.isMoving,
+  }, [wanderingShip.isMoving, wanderingShip.distanceToPlayer, merchantEngineSound]);
     wanderingShip.isPaused,
     wanderingShip.distanceToPlayer,
     merchantEngineSound,
