@@ -1502,6 +1502,14 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     e.preventDefault();
     e.stopPropagation();
 
+    // Check if holding Shift for resize mode
+    if (e.shiftKey) {
+      setResizingPoint(point.id);
+      setResizeStartScale(point.scale || 1);
+      setResizeStartY(e.clientY);
+      return;
+    }
+
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
