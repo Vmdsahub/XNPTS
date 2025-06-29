@@ -311,7 +311,7 @@ export const AdminPanel: React.FC = () => {
                     {code.rewards.cash > 0 && (
                       <span className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
                         <img
-                          src="https://cdn.builder.io/api/v1/image/assets%2Ff481900009a94cda953c032479392a30%2F8bb45b10e920461dae796f0f945a1b33?format=webp&width=800"
+                          src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F38a7eab3791441c7bc853afba8904317?format=webp&width=800"
                           alt="Xenocash"
                           className="w-5 h-5"
                         />
