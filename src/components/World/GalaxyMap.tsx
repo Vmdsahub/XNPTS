@@ -2063,14 +2063,21 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         let bounceDirection = newDirection;
 
         if (distanceFromCenter > 35) {
-          // Suave reflexão nas bordas
-          const angleToCenter = Math.atan2(50 - newY, 50 - newX);
+          // Reflexão suave sem teleporte - só muda direção
+          const angleToCenter = Math.atan2(50 - prev.y, 50 - prev.x);
           bounceDirection =
-            angleToCenter + Math.PI + (Math.random() - 0.5) * 0.5; // Adiciona variação
+            angleToCenter + Math.PI + (Math.random() - 0.5) * 0.8;
 
-          // Reposiciona dentro do limite
-          finalX = 50 + Math.cos(angleToCenter) * 34;
-          finalY = 50 + Math.sin(angleToCenter) * 34;
+          // Mantém posição atual (não teleporta) e só ajusta se necessário
+          if (distanceFromCenter > 36) {
+            // Só reposiciona se realmente saiu muito do limite
+            finalX = 50 + Math.cos(angleToCenter) * 35;
+            finalY = 50 + Math.sin(angleToCenter) * 35;
+          } else {
+            // Usa posição anterior para evitar teleporte
+            finalX = prev.x;
+            finalY = prev.y;
+          }
         }
 
         // Calcula rotação baseada na direção do movimento
