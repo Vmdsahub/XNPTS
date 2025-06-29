@@ -366,7 +366,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     const life = 60 + Math.random() * 120; // Vida entre 1-3 segundos a 60fps
     const tailLength = 12 + Math.random() * 18; // Comprimento da cauda (reduzido)
 
-    // Posição inicial fora da tela
+    // Posi��ão inicial fora da tela
     const margin = 100;
     let startX, startY;
 
@@ -2184,20 +2184,20 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             }}
             transition={{
               rotate: {
-                duration: 600, // Rota��ão muito mais lenta - 10 minutos por volta
+                duration: 600, // Rotação muito mais lenta - 10 minutos por volta
                 repeat: Infinity,
                 ease: "linear",
               },
             }}
           />
 
-          {/* Nave navegante dentro da barreira */}
+          {/* Nave mercante navegante dentro da barreira */}
           <motion.div
             className="absolute cursor-pointer z-20"
             style={{
-              left: "50%",
-              top: "50%",
-              transform: `translate(-50%, -50%) rotate(${wanderingShipAngle}deg) translateY(-800px)`,
+              left: `${wanderingShip.x}%`,
+              top: `${wanderingShip.y}%`,
+              transform: `translate(-50%, -50%)`,
               pointerEvents: "auto",
             }}
             onClick={(e) => {
@@ -2207,20 +2207,81 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
-            <motion.img
-              src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F35b6bdfaaf2f41f2882a22458f10917d?format=webp&width=800"
-              alt="Nave Navegante"
-              className="w-16 h-16"
+            <motion.div
+              className="relative w-10 h-10"
+              style={{ rotate: wanderingShip.rotation }}
               animate={{
-                y: [0, -3, 0, 3, 0],
-                rotate: [0, 2, 0, -2, 0],
+                scale: wanderingShip.isMoving ? 1.05 : 1,
+                // Vibração quando se movendo ou flutuação quando parado
+                y: wanderingShip.isMoving
+                  ? [0, -0.5, 0, 0.5, 0]
+                  : [0, -2, 0, 2, 0],
+                x: wanderingShip.isMoving
+                  ? [0, 0.5, 0, -0.5, 0]
+                  : [0, 1.5, 0, -1.5, 0],
               }}
               transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
+                scale: { type: "spring", stiffness: 300, damping: 30 },
+                y: {
+                  duration: wanderingShip.isMoving ? 0.15 : 2.2,
+                  repeat: Infinity,
+                  ease: wanderingShip.isMoving ? "linear" : "easeInOut",
+                },
+                x: {
+                  duration: wanderingShip.isMoving ? 0.12 : 2.8,
+                  repeat: Infinity,
+                  ease: wanderingShip.isMoving ? "linear" : "easeInOut",
+                },
               }}
-            />
+            >
+              {/* Imagem da nave mercante */}
+              <motion.img
+                src="https://cdn.builder.io/api/v1/image/assets%2Fc013caa4db474e638dc2961a6085b60a%2F35b6bdfaaf2f41f2882a22458f10917d?format=webp&width=800"
+                alt="Nave Mercante"
+                className="w-full h-full object-contain drop-shadow-lg"
+              />
+
+              {/* Trilha de propulsão - apenas quando se movendo */}
+              {wanderingShip.isMoving && (
+                <>
+                  <motion.div
+                    className="absolute w-0.5 h-6 bg-gradient-to-t from-transparent to-orange-400 transform -translate-x-1/2"
+                    style={{
+                      top: "calc(100% - 12px)",
+                      left: "calc(50% - 1px)",
+                      zIndex: -1,
+                    }}
+                    animate={{
+                      opacity: [0.3, 0.8, 0.3],
+                      scaleY: [0.5, 1, 0.5],
+                    }}
+                    transition={{
+                      duration: 0.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                  <motion.div
+                    className="absolute w-0.5 h-5 bg-gradient-to-t from-transparent to-yellow-300 transform -translate-x-1/2"
+                    style={{
+                      top: "calc(100% - 8px)",
+                      left: "calc(50% - 1px)",
+                      zIndex: -1,
+                    }}
+                    animate={{
+                      opacity: [0.2, 0.6, 0.2],
+                      scaleY: [0.3, 1, 0.3],
+                    }}
+                    transition={{
+                      duration: 0.3,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 0.1,
+                    }}
+                  />
+                </>
+              )}
+            </motion.div>
           </motion.div>
         </div>
         {/* Novos pontos clicáveis */}
