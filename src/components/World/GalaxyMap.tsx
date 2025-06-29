@@ -436,7 +436,7 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
         const opacity = Math.min(1, (star.life / star.maxLife) * 1.2); // Mais luminosas
         const timeDelta = (currentTime - star.startTime) * 0.001;
 
-        // Animação de tamanho baseada em seno
+        // Animaç��o de tamanho baseada em seno
         const sizeVariation = 1 + Math.sin(timeDelta * 8) * 0.3; // Pulso mais intenso
         const currentSize = star.size * sizeVariation;
 
@@ -1798,11 +1798,17 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
     if (isDragging || draggingPoint !== null) {
       document.addEventListener("mousemove", handleGlobalMouseMove);
       document.addEventListener("mouseup", handleGlobalMouseUp);
+      document.addEventListener("touchmove", handleGlobalTouchMove, {
+        passive: false,
+      });
+      document.addEventListener("touchend", handleGlobalTouchEnd);
     }
 
     return () => {
       document.removeEventListener("mousemove", handleGlobalMouseMove);
       document.removeEventListener("mouseup", handleGlobalMouseUp);
+      document.removeEventListener("touchmove", handleGlobalTouchMove);
+      document.removeEventListener("touchend", handleGlobalTouchEnd);
     };
   }, [
     isDragging,
