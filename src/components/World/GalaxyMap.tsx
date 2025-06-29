@@ -2054,14 +2054,12 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
       animationId = requestAnimationFrame(updateWanderingShip);
     };
 
-    // Inicializa com uma rota
-    const route = generateNewRoute();
+    // Inicializa movimento suave da nave
     setWanderingShip((prev) => ({
       ...prev,
-      ...route,
-      progress: 0,
-      behavior: "patrolling",
       isMoving: true,
+      direction: Math.random() * Math.PI * 2,
+      targetDirection: Math.random() * Math.PI * 2,
     }));
 
     animationId = requestAnimationFrame(updateWanderingShip);
