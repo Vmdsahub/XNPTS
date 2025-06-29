@@ -454,6 +454,7 @@ class BackgroundMusicService {
         osc.stop(startTime + 90);
 
         this.currentOscillators.push(osc);
+        this.currentGainNodes.push(gain);
       });
     });
   }
