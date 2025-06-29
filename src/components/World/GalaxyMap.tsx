@@ -1798,13 +1798,18 @@ export const GalaxyMap: React.FC<GalaxyMapProps> = () => {
                 className={`w-48 h-48 transition-all duration-300 relative ${
                   draggingPoint === point.id
                     ? "scale-110 brightness-110"
-                    : "hover:scale-105 hover:brightness-110"
+                    : resizingPoint === point.id
+                      ? "brightness-125"
+                      : "hover:scale-105 hover:brightness-110"
                 }`}
                 style={{
+                  transform: `scale(${point.scale || 1})`,
                   filter:
                     draggingPoint === point.id
                       ? "drop-shadow(0 0 20px rgba(255, 255, 0, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
-                      : "drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1))",
+                      : resizingPoint === point.id
+                        ? "drop-shadow(0 0 25px rgba(0, 255, 255, 0.8)) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4))"
+                        : "drop-shadow(0 8px 25px rgba(0, 0, 0, 0.4)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1))",
                 }}
               >
                 <img
