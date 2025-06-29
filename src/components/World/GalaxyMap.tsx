@@ -19,6 +19,7 @@ import {
   stopEngineSound,
 } from "../../utils/soundManager";
 import { useAuthStore } from "../../store/authStore";
+import { gameService, GalaxyWorld } from "../../services/gameService";
 
 interface GalaxyMapProps {}
 
