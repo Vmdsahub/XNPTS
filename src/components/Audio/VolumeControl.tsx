@@ -62,11 +62,14 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
   };
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div
+      className={`flex items-center gap-2 ${className}`}
+      style={{ marginRight: "12px" }}
+    >
       {showPlayButton && (
         <button
           onClick={handlePlayClick}
-          className="text-purple-600 hover:text-purple-700 transition-colors p-1 bg-purple-100 rounded-full"
+          className="text-blue-600 hover:text-blue-700 transition-colors p-1 bg-blue-100 rounded-full"
           title="Iniciar música"
         >
           <Play size={14} />
@@ -91,7 +94,7 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
         className="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer volume-slider"
         title="Volume"
         style={{
-          background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${volume * 100}%, rgba(156, 163, 175, 0.5) ${volume * 100}%, rgba(156, 163, 175, 0.5) 100%)`,
+          background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${volume * 100}%, rgba(156, 163, 175, 0.5) ${volume * 100}%, rgba(156, 163, 175, 0.5) 100%)`,
         }}
       />
     </div>
